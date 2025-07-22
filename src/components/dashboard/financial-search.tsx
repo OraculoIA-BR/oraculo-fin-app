@@ -55,7 +55,7 @@ export function FinancialSearch() {
             <Input
               type="search"
               placeholder="Ex: Como posso começar a investir com pouco dinheiro?"
-              className="pl-10"
+              className="pl-10 text-foreground"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               disabled={isLoading}
