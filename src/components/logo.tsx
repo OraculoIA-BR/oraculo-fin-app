@@ -21,17 +21,23 @@ export function Logo({ className, ...props }: React.SVGProps<SVGSVGElement>) {
         d="M20 32a12 12 0 1 0 0-24 12 12 0 0 0 0 24z"
         fill="hsl(var(--background))"
       />
-       <path
-        d="M20 12l-2.472 5.528H12.5l4.014 3.944-1.486 5.528L20 23.056l4.972 3.944-1.486-5.528L27.5 17.528h-5.028L20 12z"
+       <text
+        x="20"
+        y="28"
+        fontFamily="Inter, sans-serif"
+        fontSize="24"
+        textAnchor="middle"
         fill="hsl(var(--accent))"
-      />
+      >
+        *
+      </text>
       <text
-        x="50"
+        x="45"
         y="30"
         fontFamily="Inter, sans-serif"
         fontSize="28"
         fontWeight="bold"
-        fill="hsl(var(--background))"
+        fill="hsl(var(--primary))"
       >
         ráculo
       </text>
