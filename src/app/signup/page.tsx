@@ -15,13 +15,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { Loader2 } from 'lucide-react';
+import { signInWithGoogle } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { GoogleIcon } from '@/components/icons/google-icon';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +42,21 @@ export default function SignupPage() {
     setIsLoading(false);
   };
 
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      router.push('/dashboard');
+    } catch (err) {
+      setError('Falha ao fazer login com o Google.');
+      console.error(err);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="w-full max-w-md mx-auto">
@@ -51,46 +71,61 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignup} className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@exemplo.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="text-foreground"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="text-foreground"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirmar Senha</Label>
-                <Input 
-                  id="confirm-password" 
-                  type="password" 
-                  required 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="text-foreground"
-                />
-              </div>
-               {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                 {isLoading ? <Loader2 className="animate-spin" /> : 'Cadastrar'}
+             <div className="grid gap-4">
+               <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isGoogleLoading}>
+                {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-4 w-4" /> Cadastre-se com Google</>}
               </Button>
-            </form>
+               <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Ou continue com
+                  </span>
+                </div>
+              </div>
+              <form onSubmit={handleSignup} className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@exemplo.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="text-blue-500"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="text-blue-500"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                  <Input 
+                    id="confirm-password" 
+                    type="password" 
+                    required 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="text-blue-500"
+                  />
+                </div>
+                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : 'Cadastrar'}
+                </Button>
+              </form>
+            </div>
             <div className="mt-4 text-center text-sm">
               Já tem uma conta?{' '}
               <Link href="/login" className="underline">
