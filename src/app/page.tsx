@@ -19,9 +19,9 @@ export default async function Home() {
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
           <div className="flex items-center gap-3">
-            <Logo className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight text-primary">
-              Oráculo Financeiro
+            <Logo className="h-10 w-auto" />
+            <h1 className="text-2xl font-bold tracking-tight text-primary sr-only">
+              Oráculo
             </h1>
           </div>
         </div>
