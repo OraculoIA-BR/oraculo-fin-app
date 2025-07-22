@@ -18,13 +18,10 @@ export default async function Home() {
   return (
     <div className="flex min-h-screen bg-background">
       <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-40 w-full border-b bg-primary">
           <div className="container mx-auto flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
             <div className="flex items-center gap-3">
               <Logo className="h-10 w-auto" />
-              <h1 className="text-2xl font-bold tracking-tight text-primary sr-only">
-                Oráculo
-              </h1>
             </div>
           </div>
         </header>
@@ -47,7 +44,7 @@ export default async function Home() {
         </main>
         <WhatsAppFAB />
       </div>
-      <aside className="hidden lg:block w-[200px] xl:w-[280px]">
+      <aside className="w-[80px] lg:w-[200px] xl:w-[280px]">
         <Decoration />
       </aside>
     </div>
