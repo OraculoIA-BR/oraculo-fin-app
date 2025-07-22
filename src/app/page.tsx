@@ -6,6 +6,7 @@ import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { SavingSuggestions } from '@/components/dashboard/saving-suggestions';
 import { WhatsAppFAB } from '@/components/dashboard/whatsapp-fab';
+import { Decoration } from '@/components/decoration';
 
 export default async function Home() {
   // Fetch AI suggestions on the server
@@ -15,35 +16,40 @@ export default async function Home() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-          <div className="flex items-center gap-3">
-            <Logo className="h-10 w-auto" />
-            <h1 className="text-2xl font-bold tracking-tight text-primary sr-only">
-              Oráculo
-            </h1>
-          </div>
-        </div>
-      </header>
-      <main className="flex-1 p-4 md:p-8 container mx-auto">
-        <div className="grid gap-6 md:gap-8">
-          <SummaryCards />
-          
-          <div className="grid gap-6 md:gap-8 lg:grid-cols-5">
-            <div className="lg:col-span-3 space-y-6">
-              <FinancialSearch />
-              <RecentTransactions />
-            </div>
-            <div className="lg:col-span-2 space-y-6">
-              <SpendingChart />
+    <div className="flex min-h-screen bg-background">
+      <div className="flex-1 flex flex-col">
+        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+            <div className="flex items-center gap-3">
+              <Logo className="h-10 w-auto" />
+              <h1 className="text-2xl font-bold tracking-tight text-primary sr-only">
+                Oráculo
+              </h1>
             </div>
           </div>
-          
-          <SavingSuggestions suggestions={savingSuggestions.suggestions} />
-        </div>
-      </main>
-      <WhatsAppFAB />
+        </header>
+        <main className="flex-1 p-4 md:p-8 container mx-auto">
+          <div className="grid gap-6 md:gap-8">
+            <SummaryCards />
+            
+            <div className="grid gap-6 md:gap-8 lg:grid-cols-5">
+              <div className="lg:col-span-3 space-y-6">
+                <FinancialSearch />
+                <RecentTransactions />
+              </div>
+              <div className="lg:col-span-2 space-y-6">
+                <SpendingChart />
+              </div>
+            </div>
+            
+            <SavingSuggestions suggestions={savingSuggestions.suggestions} />
+          </div>
+        </main>
+        <WhatsAppFAB />
+      </div>
+      <aside className="hidden lg:block w-[200px] xl:w-[280px]">
+        <Decoration />
+      </aside>
     </div>
   );
 }
