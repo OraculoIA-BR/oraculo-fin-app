@@ -6,7 +6,6 @@ import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { SavingSuggestions } from '@/components/dashboard/saving-suggestions';
 import { WhatsAppFAB } from '@/components/dashboard/whatsapp-fab';
-import { Decoration } from '@/components/decoration';
 
 export default async function Home() {
   // Fetch AI suggestions on the server
@@ -16,7 +15,7 @@ export default async function Home() {
   });
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-40 w-full border-b bg-primary">
           <div className="container mx-auto flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
@@ -44,9 +43,6 @@ export default async function Home() {
         </main>
         <WhatsAppFAB />
       </div>
-      <aside className="w-[80px] lg:w-[200px] xl:w-[280px]">
-        <Decoration />
-      </aside>
     </div>
   );
 }
