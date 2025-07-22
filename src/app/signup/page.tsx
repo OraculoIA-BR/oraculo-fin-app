@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { Loader2 } from 'lucide-react';
-import { signInWithGoogle } from '@/lib/firebase';
+import { signInWithGoogle, auth } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { GoogleIcon } from '@/components/icons/google-icon';
 
@@ -27,6 +28,13 @@ export default function SignupPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [user, loading] = useAuthState(auth);
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +55,7 @@ export default function SignupPage() {
     setError(null);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+       // O useEffect cuidará do redirecionamento
     } catch (err) {
       setError('Falha ao fazer login com o Google.');
       console.error(err);
@@ -56,6 +64,13 @@ export default function SignupPage() {
     }
   };
 
+  if (loading || user) {
+    return (
+     <div className="flex items-center justify-center min-h-screen bg-background">
+       <Loader2 className="h-10 w-10 animate-spin text-primary" />
+     </div>
+   );
+ }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -95,7 +110,7 @@ export default function SignupPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="text-blue-500"
+                    className="text-blue-900"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -106,7 +121,7 @@ export default function SignupPage() {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="text-blue-500"
+                    className="text-blue-900"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -117,7 +132,7 @@ export default function SignupPage() {
                     required 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="text-blue-500"
+                    className="text-blue-900"
                   />
                 </div>
                 {error && <p className="text-sm font-medium text-destructive">{error}</p>}

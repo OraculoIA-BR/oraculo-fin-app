@@ -3,7 +3,6 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 
 const firebaseConfig = {
   projectId: "orculo-financeiro-pupq1",
