@@ -61,6 +61,7 @@ export default function SignupPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="text-foreground"
                 />
               </div>
               <div className="grid gap-2">
@@ -71,6 +72,7 @@ export default function SignupPage() {
                   required 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="text-foreground"
                 />
               </div>
               <div className="grid gap-2">
@@ -81,6 +83,7 @@ export default function SignupPage() {
                   required 
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="text-foreground"
                 />
               </div>
                {error && <p className="text-sm font-medium text-destructive">{error}</p>}

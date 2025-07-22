@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,6 +22,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSecretButton, setShowSecretButton] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +33,35 @@ export default function LoginPage() {
     console.log('Login com:', { email, password });
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simula a chamada de API
     setIsLoading(false);
+    // Em um app real, você redirecionaria após o sucesso do login
+    // router.push('/dashboard'); 
   };
+  
+  const handleSecretLogin = () => {
+    router.push('/dashboard');
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex justify-center mb-6">
+      <div className="w-full max-w-md mx-auto relative">
+        <div 
+          className="flex justify-center mb-6"
+          onMouseEnter={() => setShowSecretButton(true)}
+          onMouseLeave={() => setShowSecretButton(false)}
+        >
             <Logo className="h-20 w-auto" />
         </div>
+
+        {showSecretButton && (
+            <Button 
+                onClick={handleSecretLogin}
+                variant="ghost" 
+                className="absolute top-20 left-1/2 -translate-x-1/2 -translate-y-full opacity-80 hover:opacity-100"
+            >
+                Entrar sem login
+            </Button>
+        )}
+
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Login</CardTitle>
@@ -56,6 +80,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="text-foreground"
                 />
               </div>
               <div className="grid gap-2">
@@ -66,6 +91,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="text-foreground"
                 />
               </div>
               {error && <p className="text-sm font-medium text-destructive">{error}</p>}
