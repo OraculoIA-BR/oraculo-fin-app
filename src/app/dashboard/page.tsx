@@ -2,6 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuth, signOut } from "firebase/auth";
 import { useToast } from '@/hooks/use-toast';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
@@ -9,11 +10,10 @@ import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { SavingSuggestions } from '@/components/dashboard/saving-suggestions';
 import { FinancialSearch } from '@/components/dashboard/financial-search';
 import { WhatsAppFAB } from '@/components/dashboard/whatsapp-fab';
-import { CategoryCharts } from '@/components/dashboard/category-charts'; 
+import { CategoryCharts } from '@/components/dashboard/category-charts';
 import { generateSavingSuggestions, type GenerateSavingSuggestionsOutput } from '@/ai/flows/generate-saving-suggestions';
 import { Loader2, LogOut } from 'lucide-react';
 import { Logo } from '@/components/logo';
-import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 
 async function getSavingSuggestions(): Promise<GenerateSavingSuggestionsOutput> {
@@ -29,22 +29,34 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [suggestions, setSuggestions] = React.useState<GenerateSavingSuggestionsOutput['suggestions']>([]);
   const [dataLoading, setDataLoading] = React.useState(true);
+  const auth = getAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+      router.push('/login');
+    } catch (error) {
+      toast({
+        title: "Erro no Logout",
+        description: "Não foi possível fazer o logout. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    // A verificação de login foi desativada para desenvolvimento.
+  }, [user, loading, router]);
 
   React.useEffect(() => {
     getSavingSuggestions()
       .then(output => setSuggestions(output.suggestions))
       .finally(() => setDataLoading(false));
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      toast({ title: "Logout", description: "Você foi desconectado com sucesso." });
-      router.push('/login');
-    } catch (error) {
-      toast({ title: "Erro", description: "Ocorreu um erro ao fazer logout.", variant: "destructive" });
-    }
-  };
 
   if (loading || dataLoading) {
     return (

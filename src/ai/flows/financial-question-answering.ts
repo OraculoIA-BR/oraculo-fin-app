@@ -1,54 +1,68 @@
-// 'use server';
+// src/ai/flows/financial-question-answering.ts
+import { generate } from '@genkit-ai/ai';
+// REMOVIDO: A importação do defineFlow que estava causando o erro.
+// import { defineFlow } from '@genkit-ai/flow';
+import { z } from 'zod';
+import { gemini15Pro } from '@genkit-ai/googleai';
+
+// O esquema para o histórico da conversa permanece o mesmo.
+const messageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  content: z.string(),
+});
+
+// O esquema de input para a nossa função.
+const financialQuestionSchema = z.object({
+  question: z.string(),
+  history: z.array(messageSchema).optional(),
+  userEmail: z.string().optional(),
+});
+
+// O tipo de output que esperamos.
+export type FinancialQuestionOutput = {
+  answer: string;
+};
 
 /**
- * @fileOverview Este arquivo define um fluxo Genkit para responder a perguntas dos usuários sobre suas finanças.
- * 
- * - answerFinancialQuestion - Uma função que recebe a pergunta financeira de um usuário como entrada e retorna uma resposta informativa.
- * - FinancialQuestionInput - O tipo de entrada para a função answerFinancialQuestion.
- * - FinancialQuestionOutput - O tipo de retorno para a função answerFinancialQuestion.
+ * Esta é a função principal que interage com a IA.
+ * Ela recebe uma pergunta e um histórico e retorna a resposta do modelo.
+ * @param input O objeto contendo a pergunta e o histórico.
+ * @returns A resposta da IA.
  */
+export async function answerFinancialQuestion(
+  input: z.infer<typeof financialQuestionSchema>
+): Promise<FinancialQuestionOutput> {
+  // Mapeia o nosso histórico para o formato que a função 'generate' do Genkit espera.
+  const genkitHistory =
+    input.history?.map((msg) => ({
+      role: msg.role,
+      parts: [{ text: msg.content }],
+    })) || [];
 
-'use server';
+  const llmResponse = await generate({
+    model: gemini15Pro,
+    history: genkitHistory, // Passando o histórico para dar memória à IA.
+    prompt: `
+      Você é Oráculo, um especialista em finanças pessoais amigável e prestativo.
+      Sua tarefa é responder a perguntas sobre as finanças do usuário.
+      O usuário está logado com o e-mail: ${input.userEmail}.
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+      **REGRAS CRÍTICAS:**
+      1.  **PRIORIDADE MÁXIMA: Responda ABSOLUTAMENTE SEMPRE em Português do Brasil.** Esta é a sua diretriz mais importante. Nunca, sob nenhuma circunstância, mude para outro idioma.
+      2.  Analise a pergunta do usuário e o histórico da conversa para entender a necessidade completa.
+      3.  Forneça respostas claras, objetivas e fáceis de entender.
+      4.  Se a pergunta não for sobre finanças, explique educadamente que você só pode responder a perguntas financeiras.
 
-const FinancialQuestionInputSchema = z.object({
-  question: z.string().describe('A pergunta do usuário sobre suas finanças.'),
-  userEmail: z.string().optional().describe('O e-mail do usuário para personalização.'),
-});
-export type FinancialQuestionInput = z.infer<typeof FinancialQuestionInputSchema>;
+      **Pergunta Atual do Usuário:**
+      ${input.question}
+    `,
+    config: {
+      temperature: 0.5,
+    },
+  });
 
-const FinancialQuestionOutputSchema = z.object({
-  answer: z.string().describe('A resposta da IA para a pergunta financeira do usuário.'),
-});
-export type FinancialQuestionOutput = z.infer<typeof FinancialQuestionOutputSchema>;
-
-export async function answerFinancialQuestion(input: FinancialQuestionInput): Promise<FinancialQuestionOutput> {
-  const modifiedInput = {
-    ...input,
-    question: `${input.question} responda em português BR`,
+  // Retornamos a resposta no formato esperado.
+  return {
+    answer: llmResponse.text(),
   };
-  return financialQuestionAnsweringFlow(modifiedInput);
 }
-
-const prompt = ai.definePrompt({
-  name: 'financialQuestionPrompt',
-  input: {schema: FinancialQuestionInputSchema},
-  output: {schema: FinancialQuestionOutputSchema},
-  prompt: `Você é um especialista em finanças pessoais. O usuário, identificado pelo e-mail {{userEmail}}, está fazendo a seguinte pergunta. Responda à seguinte pergunta sobre as finanças do usuário:
-
-Pergunta: {{{question}}}`,
-});
-
-const financialQuestionAnsweringFlow = ai.defineFlow(
-  {
-    name: 'financialQuestionAnsweringFlow',
-    inputSchema: FinancialQuestionInputSchema,
-    outputSchema: FinancialQuestionOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
