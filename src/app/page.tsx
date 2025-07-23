@@ -4,6 +4,55 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, BarChart, Bot, Coins } from 'lucide-react';
 import Image from 'next/image';
 
+// --- Componente de Gráfico de Pizza com Legenda ---
+const ExamplePieChart = () => {
+    // Dados com proporções realistas
+    const categories = [
+        { name: "Moradia", value: 30, color: "bg-blue-800" },
+        { name: "Alimentação", value: 16, color: "bg-blue-600" },
+        { name: "Transporte", value: 8, color: "bg-blue-400" },
+        { name: "Contas", value: 7, color: "bg-blue-300" },
+        { name: "Dívidas", value: 5, color: "bg-blue-200" },
+        { name: "Investimentos", value: 5, color: "bg-pink-500" },
+        { name: "Saúde", value: 5, color: "bg-pink-400" },
+        { name: "Compras", value: 4, color: "bg-pink-300" },
+        { name: "Lazer", value: 4, color: "bg-pink-200" },
+        { name: "Educação", value: 3, color: "bg-sky-400" },
+    ];
+
+    // Cria o gradiente cônico para a pizza
+    const conicGradient = `conic-gradient(${
+        categories.map((cat, index) => {
+            const startAngle = categories.slice(0, index).reduce((acc, c) => acc + (c.value * 3.6), 0);
+            const endAngle = startAngle + (cat.value * 3.6);
+            const colorMap: { [key: string]: string } = {
+                'blue-800': '#2B3FAE', 'blue-600': '#4F46E5', 'blue-400': '#60A5FA', 'blue-300': '#93C5FD', 'blue-200': '#BFDBFE',
+                'pink-500': '#EC4899', 'pink-400': '#F472B6', 'pink-300': '#F9A8D4', 'pink-200': '#FBCFE8',
+                'sky-400': '#38BDF8'
+            };
+            return `${colorMap[cat.color.replace('bg-', '')]} ${startAngle}deg ${endAngle}deg`;
+        }).join(', ')
+    })`;
+    
+    return (
+        <div className="bg-white p-4 rounded-lg shadow-lg text-center">
+            <h3 className="text-md font-bold text-blue-900 mb-4">Gastos Mensais (Exemplo)</h3>
+            <div
+                className="w-40 h-40 mx-auto rounded-full"
+                style={{ background: conicGradient }}
+            />
+            <div className="mt-4 grid grid-cols-2 text-left text-xs gap-x-4 gap-y-1">
+                {categories.map((cat) => (
+                    <div key={cat.name} className="flex items-center space-x-2">
+                        <span className={`w-3 h-3 rounded-full ${cat.color}`} />
+                        <span className="text-gray-600">{cat.name} ({cat.value}%)</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -13,10 +62,10 @@ export default function LandingPage() {
         <section className="w-full py-20 md:py-32 lg:py-40 bg-white shadow-sm">
           <div className="container px-4 md:px-6 text-center">
             <h1 className="text-4xl font-bold tracking-tighter text-blue-900 sm:text-5xl md:text-6xl lg:text-7xl">
-              Inteligência Financeira ao seu Alcance
+              Transforme Sua Vida Financeira com a IA do Oráculo Financeiro
             </h1>
-            <p className="mx-auto max-w-[700px] text-gray-600 md:text-xl mt-6">
-              O Oráculo combina controle de despesas e o poder da IA para te dar clareza e controle sobre seu dinheiro. Chega de planilhas, comece a planejar seu futuro.
+            <p className="mx-auto max-w-[800px] text-gray-600 md:text-xl mt-6">
+              Sua plataforma de inteligência artificial para controle de gastos, planejamento e insights que realmente fazem a diferença.
             </p>
             <div className="mt-8">
               <Button asChild size="lg" className="bg-pink-600 hover:bg-pink-700 text-white shadow-lg px-8 py-6 text-lg">
@@ -46,9 +95,9 @@ export default function LandingPage() {
                         <Coins className="h-8 w-8 text-pink-600" />
                     </div>
                 </div>
-                <h3 className="text-xl font-bold text-blue-800">1. Registre suas Finanças</h3>
+                <h3 className="text-xl font-bold text-blue-800">1. Suas Finanças registradas automaticamente</h3>
                 <p className="text-gray-600">
-                  Conecte suas contas ou cadastre suas receitas e despesas de forma rápida. A organização é o primeiro passo para o controle.
+                  Conecte sua conta bancária com segurança e veja suas transações serem importadas e categorizadas automaticamente. Diga adeus ao trabalho manual.
                 </p>
               </div>
               <div className="grid gap-2 text-center">
@@ -59,7 +108,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-blue-800">2. Visualize seus Gastos</h3>
                 <p className="text-gray-600">
-                  Nossos gráficos intuitivos mostram para onde seu dinheiro está indo. Identifique padrões, veja oportunidades de economia e acompanhe seu progresso.
+                  Nossos gráficos intuitivos mostram para onde seu dinheiro está indo. Com a ajuda da nossa IA, identifique padrões e oportunidades de economia.
                 </p>
               </div>
               <div className="grid gap-2 text-center">
@@ -70,7 +119,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-blue-800">3. Converse com a IA</h3>
                 <p className="text-gray-600">
-                  Pergunte ao Oráculo. Peça dicas de economia, análises de gastos ou sugestões de investimento. A IA está aqui para te ajudar a tomar as melhores decisões.
+                  Ela irá analisar seus padrões de gastos e resolver problemas. Além disso, peça dicas e sugestões de investimento super conservadores. A IA está aqui para te ajudar a tomar as melhores decisões.
                 </p>
               </div>
             </div>
@@ -88,10 +137,12 @@ export default function LandingPage() {
                         Veja como o Oráculo se encaixa na sua vida, seja no celular ou no computador.
                     </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 items-center">
                     <div className="flex flex-col items-center">
-                        <Image src="https://placehold.co/500x350/E9D8FD/4F46E5?text=Dashboard+no+PC" alt="Dashboard no Desktop" width={500} height={350} className="rounded-lg shadow-lg" />
-                        <p className="mt-4 text-lg font-semibold text-blue-800">Visão Completa no seu Computador</p>
+                         <div className="w-full max-w-sm">
+                            <ExamplePieChart />
+                        </div>
+                        <p className="mt-4 text-lg font-semibold text-blue-800">Visão Clara no seu Computador</p>
                         <p className="text-gray-600 max-w-sm">Acesse gráficos detalhados e planeje suas finanças com a conveniência de uma tela grande.</p>
                     </div>
                     <div className="flex flex-col items-center">
@@ -106,12 +157,16 @@ export default function LandingPage() {
       <footer className="w-full py-8 bg-white border-t">
           <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
             <div className="text-center md:text-left mb-4 md:mb-0">
-                <p>&copy; {new Date().getFullYear()} Oráculo Financeiro. Todos os direitos reservados.</p>
+                <p className="font-semibold">&copy; {new Date().getFullYear()} Oráculo Financeiro IA</p>
                 <p className="mt-1">Feito com muito ☕ e 🤖 por Victão</p>
             </div>
             <div className="text-center md:text-right">
-                <p>Respeitamos a sua privacidade. <Link href="/privacy" className="font-semibold text-blue-700 hover:underline">Política de Privacidade (LGPD)</Link></p>
-                <p className="mt-1">Contato: <a href="mailto:sistemaoraculoia@gmail.com" className="font-semibold text-blue-700 hover:underline">sistemaoraculoia@gmail.com</a></p>
+                <Link href="/privacy" className="font-semibold text-blue-700 hover:underline">
+                    Política de Privacidade (LGPD)
+                </Link>
+                <p className="mt-1">
+                    Contato:
+                </p>
             </div>
           </div>
       </footer>
