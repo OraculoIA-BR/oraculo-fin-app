@@ -42,8 +42,8 @@ const CategoryChart = ({ title, data, icon: Icon }: { title: string, data: any[]
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          <Tooltip />
-          <Bar dataKey="value" fill="#2B3FAE" />
+          <Tooltip formatter={(value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)} />
+          <Bar dataKey="value" fill="#2B3FAE" name="Valor" />
         </BarChart>
       </ResponsiveContainer>
     </CardContent>

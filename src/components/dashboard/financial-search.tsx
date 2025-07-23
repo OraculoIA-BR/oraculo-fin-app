@@ -18,7 +18,7 @@ export function FinancialSearch() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth(); // Usado apenas para personalização
+  const { user } = useAuth();
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -33,10 +33,9 @@ export function FinancialSearch() {
     scrollToBottom();
   }, [messages]);
   
-  // Adiciona uma mensagem de boas-vindas da IA
   useEffect(() => {
     setMessages([{
-      text: `Olá${user ? ', ' + user.displayName?.split(' ')[0] : ''}! Sou seu assistente financeiro. Como posso te ajudar hoje? Pergunte sobre suas finanças, peça dicas de economia ou compare produtos.`,
+      text: `Olá${user?.email ? ', ' + user.email : ''}! Sou seu assistente financeiro. Como posso te ajudar hoje? Pergunte sobre suas finanças, peça dicas de economia ou compare produtos.`,
       sender: 'bot'
     }]);
   }, [user]);
@@ -51,7 +50,7 @@ export function FinancialSearch() {
     setIsLoading(true);
 
     try {
-      const result = await handleFinancialQuestion({ question: input });
+      const result = await handleFinancialQuestion({ question: input, userEmail: user?.email });
       const botMessage: Message = { text: result.answer, sender: 'bot' };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {

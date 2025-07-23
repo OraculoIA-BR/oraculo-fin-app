@@ -1,11 +1,11 @@
 // 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for answering user questions about their finances.
+ * @fileOverview Este arquivo define um fluxo Genkit para responder a perguntas dos usuários sobre suas finanças.
  * 
- * - answerFinancialQuestion - A function that takes a user's financial question as input and returns an informative answer.
- * - FinancialQuestionInput - The input type for the answerFinancialQuestion function.
- * - FinancialQuestionOutput - The return type for the answerFinancialQuestion function.
+ * - answerFinancialQuestion - Uma função que recebe a pergunta financeira de um usuário como entrada e retorna uma resposta informativa.
+ * - FinancialQuestionInput - O tipo de entrada para a função answerFinancialQuestion.
+ * - FinancialQuestionOutput - O tipo de retorno para a função answerFinancialQuestion.
  */
 
 'use server';
@@ -14,26 +14,31 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const FinancialQuestionInputSchema = z.object({
-  question: z.string().describe('The user\'s question about their finances.'),
+  question: z.string().describe('A pergunta do usuário sobre suas finanças.'),
+  userEmail: z.string().optional().describe('O e-mail do usuário para personalização.'),
 });
 export type FinancialQuestionInput = z.infer<typeof FinancialQuestionInputSchema>;
 
 const FinancialQuestionOutputSchema = z.object({
-  answer: z.string().describe('The AI\'s answer to the user\'s financial question.'),
+  answer: z.string().describe('A resposta da IA para a pergunta financeira do usuário.'),
 });
 export type FinancialQuestionOutput = z.infer<typeof FinancialQuestionOutputSchema>;
 
 export async function answerFinancialQuestion(input: FinancialQuestionInput): Promise<FinancialQuestionOutput> {
-  return financialQuestionAnsweringFlow(input);
+  const modifiedInput = {
+    ...input,
+    question: `${input.question} responda em português BR`,
+  };
+  return financialQuestionAnsweringFlow(modifiedInput);
 }
 
 const prompt = ai.definePrompt({
   name: 'financialQuestionPrompt',
   input: {schema: FinancialQuestionInputSchema},
   output: {schema: FinancialQuestionOutputSchema},
-  prompt: `You are a personal finance expert.  Answer the following question about the user\'s finances:
+  prompt: `Você é um especialista em finanças pessoais. O usuário, identificado pelo e-mail {{userEmail}}, está fazendo a seguinte pergunta. Responda à seguinte pergunta sobre as finanças do usuário:
 
-Question: {{{question}}}`,
+Pergunta: {{{question}}}`,
 });
 
 const financialQuestionAnsweringFlow = ai.defineFlow(

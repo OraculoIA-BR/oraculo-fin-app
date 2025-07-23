@@ -70,7 +70,10 @@ export function SpendingChart() {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent 
+                hideLabel 
+                formatter={(value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
+                />}
             />
             <Pie
               data={chartData}
