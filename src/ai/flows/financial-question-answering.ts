@@ -2,7 +2,8 @@
 import { generate } from '@genkit-ai/ai';
 import { defineFlow } from '@genkit-ai/flow';
 import { z } from 'zod';
-import { geminiPro } from '@genkit-ai/googleai';
+// CORRIGIDO: O nome do modelo foi atualizado para o que está disponível na biblioteca.
+import { gemini15Pro } from '@genkit-ai/googleai';
 
 // Esquema para o histórico da conversa
 const messageSchema = z.object({
@@ -28,7 +29,8 @@ export const financialQuestionAnsweringFlow = defineFlow(
     })) || [];
 
     const llmResponse = await generate({
-      model: geminiPro,
+      // CORRIGIDO: Usando o modelo com o nome correto.
+      model: gemini15Pro,
       // Passamos o histórico para o modelo
       history: genkitHistory,
       prompt: `
