@@ -12,6 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@genkit-ai/core": "^1.15.2",
+    "@genkit-ai/dotprompt": "^0.9.12",
+    "@genkit-ai/evaluator": "^1.15.2",
     "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.14.1",
