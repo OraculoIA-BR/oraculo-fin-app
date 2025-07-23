@@ -1,25 +1,27 @@
 'use server';
 
 /**
- * @fileOverview AI agent that generates personalized saving suggestions.
+ * @fileOverview Agente de IA que gera sugestões de economia personalizadas.
  *
- * - generateSavingSuggestions - A function that generates saving suggestions for the user.
- * - GenerateSavingSuggestionsInput - The input type for the generateSavingSuggestions function.
- * - GenerateSavingSuggestionsOutput - The return type for the generateSavingSuggestions function.
+ * - generateSavingSuggestions - Uma função que gera sugestões de economia para o usuário.
+ * - GenerateSavingSuggestionsInput - O tipo de entrada para a função generateSavingSuggestions.
+ * - GenerateSavingSuggestionsOutput - O tipo de retorno para a função generateSavingSuggestions.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { generate } from '@genkit-ai/ai';
+import { z } from 'zod';
+import { gemini15Pro } from '@genkit-ai/googleai';
+
 
 const GenerateSavingSuggestionsInputSchema = z.object({
   financialSituation: z
     .string()
     .describe(
-      'Description of the user current financial situation, including income, expenses, debts, and savings.'
+      'Descrição da situação financeira atual do usuário, incluindo renda, despesas, dívidas e economias.'
     ),
   savingGoals: z
     .string()
-    .describe('The user saving goals, for example, buying a house, retiring early, etc.'),
+    .describe('Os objetivos de economia do usuário, por exemplo, comprar uma casa, aposentar-se mais cedo, etc.'),
 });
 export type GenerateSavingSuggestionsInput = z.infer<
   typeof GenerateSavingSuggestionsInputSchema
@@ -28,44 +30,47 @@ export type GenerateSavingSuggestionsInput = z.infer<
 const GenerateSavingSuggestionsOutputSchema = z.object({
   suggestions: z.array(
     z.object({
-      title: z.string().describe('The title of the saving suggestion.'),
-      description: z.string().describe('A detailed description of the suggestion.'),
-      example: z.string().describe('An example of how to implement the suggestion.'),
+      title: z.string().describe('O título da sugestão de economia.'),
+      description: z.string().describe('Uma descrição detalhada da sugestão.'),
+      example: z.string().describe('Um exemplo de como implementar a sugestão.'),
     })
-  ).describe('A list of personalized saving suggestions.'),
+  ).describe('Uma lista de sugestões de economia personalizadas.'),
 });
 export type GenerateSavingSuggestionsOutput = z.infer<
   typeof GenerateSavingSuggestionsOutputSchema
 >;
 
+/**
+ * Gera sugestões de economia personalizadas.
+ * @param input Objeto contendo a situação financeira e os objetivos do usuário.
+ * @returns Uma lista de sugestões.
+ */
 export async function generateSavingSuggestions(
   input: GenerateSavingSuggestionsInput
 ): Promise<GenerateSavingSuggestionsOutput> {
-  return generateSavingSuggestionsFlow(input);
+
+  const llmResponse = await generate({
+    model: gemini15Pro,
+    prompt: `
+      Você é um consultor financeiro pessoal. Seu objetivo é fornecer sugestões de economia personalizadas para o usuário,
+      com base em sua situação financeira e metas de economia. Forneça exemplos claros de como implementar cada sugestão.
+      Responda sempre em Português do Brasil.
+
+      **Situação Financeira:** 
+      ${input.financialSituation}
+
+      **Metas de Economia:** 
+      ${input.savingGoals}
+
+      Aqui estão algumas sugestões de economia para você:
+    `,
+    output: {
+        schema: GenerateSavingSuggestionsOutputSchema,
+    },
+    config: {
+      temperature: 0.7,
+    },
+  });
+
+  return llmResponse.output()!;
 }
-
-const prompt = ai.definePrompt({
-  name: 'generateSavingSuggestionsPrompt',
-  input: {schema: GenerateSavingSuggestionsInputSchema},
-  output: {schema: GenerateSavingSuggestionsOutputSchema},
-  prompt: `You are a personal finance advisor. Your goal is to provide personalized saving suggestions to the user, 
-based on their financial situation and saving goals. Provide clear examples of how to implement each suggestion.
-
-Financial Situation: {{{financialSituation}}}
-Saving Goals: {{{savingGoals}}}
-
-Here are some saving suggestions for you:
-`,
-});
-
-const generateSavingSuggestionsFlow = ai.defineFlow(
-  {
-    name: 'generateSavingSuggestionsFlow',
-    inputSchema: GenerateSavingSuggestionsInputSchema,
-    outputSchema: GenerateSavingSuggestionsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
