@@ -25,20 +25,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(user);
       setLoading(false);
 
-      // A LÓGICA DE REDIRECIONAMENTO GLOBAL FOI DESATIVADA PARA DESENVOLVIMENTO
-      /*
+      // Lógica de redirecionamento reativada
       const isAuthPage = pathname === "/login" || pathname === "/signup";
       
       if (user) {
+        // Se o usuário está logado e na página de login/cadastro, vai para o dashboard
         if (isAuthPage) {
           router.push("/dashboard");
         }
       } else {
+        // Se não está logado e tenta acessar uma página protegida, vai para o login
+        // (Ignora a página inicial '/')
         if (pathname !== "/" && !isAuthPage) {
            router.push("/login");
         }
       }
-      */
     });
 
     return () => unsubscribe();
@@ -46,8 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = { user, loading };
 
-  // O loader global foi mantido, mas não haverá mais redirecionamento.
-  if (loading && pathname !== "/login" && pathname !== "/signup" && pathname !== "/") {
+  // Loader global para páginas protegidas enquanto a autenticação é verificada
+  if (loading && pathname !== "/" && pathname !== "/login" && pathname !== "/signup") {
     return (
         <div className="flex items-center justify-center h-screen bg-background">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
