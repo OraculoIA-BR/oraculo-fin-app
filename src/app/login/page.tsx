@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase"; // Importa auth diretamente
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -29,10 +27,12 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: "Sucesso!", description: "Login realizado com sucesso." });
-      router.push("/dashboard");
+      // O AuthContext cuidará do redirecionamento
     } catch (error: any) {
-      setError("Email ou senha inválidos. Tente novamente.");
-      toast({ title: "Erro de Login", description: "Email ou senha inválidos.", variant: "destructive" });
+      console.error("Firebase Login Error:", error);
+      const errorMessage = error.message || "Email ou senha inválidos. Tente novamente.";
+      setError(errorMessage);
+      toast({ title: "Erro de Login", description: errorMessage, variant: "destructive" });
     } finally {
         setLoading(false);
     }
@@ -40,14 +40,16 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
+    setError(null);
     try {
+      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast({ title: "Sucesso!", description: "Login com Google realizado com sucesso." });
-      router.push("/dashboard");
     } catch (error: any) {
-      setError("Falha ao fazer login com o Google.");
-      toast({ title: "Erro de Login", description: "Não foi possível fazer login com o Google.", variant: "destructive" });
+      console.error("Google Login Error:", error);
+      const errorMessage = error.message || "Falha ao fazer login com o Google.";
+      setError(errorMessage);
+      toast({ title: "Erro de Login", description: errorMessage, variant: "destructive" });
     } finally {
         setLoading(false);
     }

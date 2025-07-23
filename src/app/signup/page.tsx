@@ -1,25 +1,26 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase"; // Importa auth diretamente
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { handleSubscribeToAlerts } from "@/app/actions";
 
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [receiveAlerts, setReceiveAlerts] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -34,16 +35,16 @@ export default function SignupPage() {
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      toast({ title: "Sucesso!", description: "Sua conta foi criada com sucesso." });
-      router.push("/dashboard");
-    } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        setError("Este email já está em uso.");
-        toast({ title: "Erro de Cadastro", description: "Este email já está em uso.", variant: "destructive" });
-      } else {
-        setError("Ocorreu um erro ao criar a conta.");
-        toast({ title: "Erro de Cadastro", description: "Ocorreu um erro ao criar a conta.", variant: "destructive" });
+      const user = auth.currentUser; // Usa currentUser após a criação
+      if (receiveAlerts && user && user.email) {
+        await handleSubscribeToAlerts(user.email);
       }
+      toast({ title: "Sucesso!", description: "Sua conta foi criada com sucesso." });
+    } catch (error: any) {
+      console.error("Firebase Signup Error:", error);
+      const errorMessage = error.message || "Ocorreu um erro desconhecido.";
+      setError(errorMessage);
+      toast({ title: "Erro de Cadastro", description: errorMessage, variant: "destructive" });
     } finally {
         setLoading(false);
     }
@@ -51,14 +52,20 @@ export default function SignupPage() {
   
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const provider = new GoogleAuthProvider();
+    setError(null);
     try {
-      await signInWithPopup(auth, provider);
-      toast({ title: "Sucesso!", description: "Login com Google realizado com sucesso." });
-      router.push("/dashboard");
-    } catch (error: any) {
-      setError("Falha ao fazer login com o Google.");
-      toast({ title: "Erro de Login", description: "Não foi possível fazer login com o Google.", variant: "destructive" });
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      if (user && user.email) {
+        await handleSubscribeToAlerts(user.email);
+      }
+      toast({ title: "Sucesso!", description: "Cadastro com Google realizado com sucesso." });
+    } catch (error: any)      {
+      console.error("Google Login Error:", error);
+      const errorMessage = error.message || "Falha ao fazer o cadastro com o Google.";
+      setError(errorMessage);
+      toast({ title: "Erro de Cadastro", description: errorMessage, variant: "destructive" });
     } finally {
         setLoading(false);
     }
@@ -116,6 +123,15 @@ export default function SignupPage() {
               required
               className="text-blue-900"
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="receiveAlerts" checked={receiveAlerts} onCheckedChange={(checked) => setReceiveAlerts(Boolean(checked))} />
+            <label
+              htmlFor="receiveAlerts"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Desejo receber alertas por email
+            </label>
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>

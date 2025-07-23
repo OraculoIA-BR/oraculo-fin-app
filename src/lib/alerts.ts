@@ -1,6 +1,6 @@
 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
-import { db } from "./firebase";
+import { db } from "./firebase"; // Importa db diretamente
 
 export const sendAlerts = async (email: string) => {
   try {
