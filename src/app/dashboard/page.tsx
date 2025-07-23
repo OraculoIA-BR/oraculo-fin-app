@@ -1,31 +1,18 @@
-'use client';
-
-import React, { useEffect } from 'react';
+"use client";
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { signOut } from "firebase/auth";
-import { auth } from '@/lib/firebase';
-import { generateSavingSuggestions, type GenerateSavingSuggestionsOutput } from '@/ai/flows/generate-saving-suggestions';
-
-import { Logo } from '@/components/logo';
+import { useToast } from '@/hooks/use-toast';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
-import { FinancialSearch } from '@/components/dashboard/financial-search';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { SavingSuggestions } from '@/components/dashboard/saving-suggestions';
+import { FinancialSearch } from '@/components/dashboard/financial-search';
 import { WhatsAppFAB } from '@/components/dashboard/whatsapp-fab';
-import { Button } from '@/components/ui/button';
-import { LogOut, Loader2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useToast } from '@/hooks/use-toast';
+import { CategoryCharts } from '@/components/dashboard/category-charts'; // Importando os novos gráficos
+import { generateSavingSuggestions, type GenerateSavingSuggestionsOutput } from '@/ai/flows/generate-saving-suggestions';
+import { Loader2 } from 'lucide-react';
+import { Logo } from '@/components/logo';
 
 // Placeholder. Em um app real, isso viria do backend.
 async function getSavingSuggestions(): Promise<GenerateSavingSuggestionsOutput> {
@@ -41,92 +28,63 @@ export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [suggestions, setSuggestions] = React.useState<GenerateSavingSuggestionsOutput['suggestions']>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
+    // A verificação de login foi desativada para desenvolvimento.
   }, [user, loading, router]);
 
 
   React.useEffect(() => {
-    if(user) {
-      getSavingSuggestions().then(output => setSuggestions(output.suggestions));
-    }
-  }, [user]);
+    // A verificação de usuário foi removida para carregar os dados de exemplo.
+    getSavingSuggestions()
+      .then(output => setSuggestions(output.suggestions))
+      .finally(() => setDataLoading(false));
+  }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      toast({ title: "Você saiu!", description: "Até a próxima!" });
-      router.push('/login');
-    } catch (error) {
-      toast({ title: "Erro", description: "Não foi possível sair.", variant: "destructive" });
-    }
-  };
-  
-  if (loading || !user) {
+  if (loading || dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+        <Logo />
+        <Loader2 className="h-10 w-10 animate-spin text-primary mt-4" />
+        <p className="text-gray-500 mt-2">Carregando seu dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 w-full border-b bg-background">
-          <div className="container mx-auto flex h-16 items-center justify-between space-x-4">
-            <div className="flex items-center gap-3">
-              <Logo className="h-10 w-auto" />
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+            <Logo />
+            {/* Aqui você pode adicionar um menu de usuário ou botão de logout no futuro */}
+        </div>
+      </header>
+      <main className="flex-1 p-4 md:p-8">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold text-blue-900 mb-6">Seu Painel Financeiro</h1>
+          <div className="grid gap-8">
+            {/* 1. Gráfico de Despesas e Transações Recentes */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <SpendingChart />
+              <RecentTransactions />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? "Usuário"} />
-                    <AvatarFallback>{user?.displayName?.charAt(0) ?? user?.email?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName ?? 'Usuário'}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sair</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-        <main className="flex-1 p-4 md:p-8 container mx-auto">
-          <div className="grid gap-6 md:gap-8">
+
+            {/* 2. Chat com a IA */}
+            <FinancialSearch />
+
+            {/* 3. Cards de Saldo, Receita e Despesas */}
             <SummaryCards />
-            
-            <div className="grid gap-6 md:gap-8 lg:grid-cols-5">
-              <div className="lg:col-span-3 space-y-6">
-                <FinancialSearch />
-                <RecentTransactions />
-              </div>
-              <div className="lg:col-span-2 space-y-6">
-                <SpendingChart />
-              </div>
-            </div>
-            
+
+            {/* 4. Dicas de Economia */}
             <SavingSuggestions suggestions={suggestions} />
+
+            {/* 5. Novos Gráficos por Categoria */}
+            <CategoryCharts />
           </div>
-        </main>
-        <WhatsAppFAB />
-      </div>
+        </div>
+      </main>
+      <WhatsAppFAB />
     </div>
   );
 }

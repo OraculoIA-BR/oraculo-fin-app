@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase"; // Importa auth diretamente
+import { auth } from "@/lib/firebase"; 
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -25,6 +25,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(user);
       setLoading(false);
 
+      // A LÓGICA DE REDIRECIONAMENTO GLOBAL FOI DESATIVADA PARA DESENVOLVIMENTO
+      /*
       const isAuthPage = pathname === "/login" || pathname === "/signup";
       
       if (user) {
@@ -36,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
            router.push("/login");
         }
       }
+      */
     });
 
     return () => unsubscribe();
@@ -43,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = { user, loading };
 
+  // O loader global foi mantido, mas não haverá mais redirecionamento.
   if (loading && pathname !== "/login" && pathname !== "/signup" && pathname !== "/") {
     return (
         <div className="flex items-center justify-center h-screen bg-background">
