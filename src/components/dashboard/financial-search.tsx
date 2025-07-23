@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { answerFinancialQuestion, type FinancialQuestionOutput } from '@/ai/flows/financial-question-answering';
+// REMOVIDO: A importação direta do fluxo da IA
+// import { answerFinancialQuestion, type FinancialQuestionOutput } from '@/ai/flows/financial-question-answering';
+// ADICIONADO: A importação da Server Action
+import { handleFinancialQuestion } from '@/app/actions';
 import { Loader2, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from '@/components/logo';
 
-// O tipo de mensagem agora corresponde ao que a IA espera
 type Message = {
-  role: 'user' | 'model'; // 'assistant' foi trocado para 'model'
+  role: 'user' | 'model';
   content: string;
 };
 
@@ -22,10 +24,8 @@ export function FinancialSearch() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
-  // A referência agora é para o DIV que contém as mensagens
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  // O efeito agora rola o DIV container, não a página inteira
   useEffect(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
@@ -43,10 +43,10 @@ export function FinancialSearch() {
     setQuery('');
 
     try {
-      // Agora enviamos o histórico da conversa junto com a nova pergunta
-      const result: FinancialQuestionOutput = await answerFinancialQuestion({
+      // MODIFICADO: Agora chama a Server Action segura
+      const result = await handleFinancialQuestion({
         question: query,
-        history: messages, // Enviando o histórico
+        history: messages,
       });
       
       const assistantMessage: Message = { role: 'model', content: result.answer };
@@ -59,7 +59,6 @@ export function FinancialSearch() {
         description: 'Não foi possível se conectar à IA. Tente novamente.',
         variant: 'destructive',
       });
-      // Remove a mensagem do usuário se a API falhar, para que ele possa tentar de novo
       setMessages(prev => prev.slice(0, prev.length -1));
     } finally {
       setLoading(false);
@@ -67,7 +66,6 @@ export function FinancialSearch() {
   };
 
   return (
-    // Card principal agora tem altura fixa e usa flexbox em coluna
     <Card className="flex flex-col h-[60vh] max-h-[700px]">
       <CardHeader>
         <CardTitle className="flex items-center">
@@ -75,20 +73,16 @@ export function FinancialSearch() {
           <span className="ml-2">Converse com o Oráculo</span>
         </CardTitle>
       </CardHeader>
-      {/* O conteúdo do Card agora se expande e contém o scroll */}
       <CardContent className="flex-1 flex flex-col min-h-0">
-        {/* Este DIV é a "janela" de mensagens, com scroll interno */}
         <div ref={messageContainerRef} className="flex-1 overflow-y-auto pr-4 space-y-4">
           {messages.map((message, index) => (
             <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
               {message.role === 'model' && (
                 <Avatar className="h-8 w-8">
-                  {/* Atualizei a URL da imagem para uma mais estável */}
                   <AvatarImage src="https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28.png" alt="Oráculo" />
                   <AvatarFallback>O</AvatarFallback>
                 </Avatar>
               )}
-              {/* Adicionado 'break-words' para quebrar o texto corretamente */}
               <div className={`rounded-lg px-4 py-2 max-w-[80%] break-words ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                 <p className="text-sm">{message.content}</p>
               </div>
