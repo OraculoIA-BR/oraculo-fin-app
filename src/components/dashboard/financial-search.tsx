@@ -10,8 +10,9 @@ import { Loader2, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from '@/components/logo';
 
+// O tipo de mensagem agora corresponde ao que a IA espera
 type Message = {
-  role: 'user' | 'assistant';
+  role: 'user' | 'model'; // 'assistant' foi trocado para 'model'
   content: string;
 };
 
@@ -21,17 +22,14 @@ export function FinancialSearch() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
-  // 1. Criar a referência para o container das mensagens
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // A referência agora é para o DIV que contém as mensagens
+  const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  // 2. Função para rolar para o final
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // 3. Efeito que executa a rolagem sempre que as mensagens mudam
+  // O efeito agora rola o DIV container, não a página inteira
   useEffect(() => {
-    scrollToBottom();
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -39,17 +37,19 @@ export function FinancialSearch() {
     if (!query.trim()) return;
 
     const userMessage: Message = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setLoading(true);
     setQuery('');
 
     try {
+      // Agora enviamos o histórico da conversa junto com a nova pergunta
       const result: FinancialQuestionOutput = await answerFinancialQuestion({
         question: query,
-        // Em um app real, o histórico da conversa seria incluído aqui.
+        history: messages, // Enviando o histórico
       });
       
-      const assistantMessage: Message = { role: 'assistant', content: result.answer };
+      const assistantMessage: Message = { role: 'model', content: result.answer };
       setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error) {
@@ -67,30 +67,33 @@ export function FinancialSearch() {
   };
 
   return (
-    <Card className="flex flex-col h-[500px]">
+    // Card principal agora tem altura fixa e usa flexbox em coluna
+    <Card className="flex flex-col h-[60vh] max-h-[700px]">
       <CardHeader>
         <CardTitle className="flex items-center">
           <Logo />
           <span className="ml-2">Converse com o Oráculo</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto pr-4 space-y-4">
+      {/* O conteúdo do Card agora se expande e contém o scroll */}
+      <CardContent className="flex-1 flex flex-col min-h-0">
+        {/* Este DIV é a "janela" de mensagens, com scroll interno */}
+        <div ref={messageContainerRef} className="flex-1 overflow-y-auto pr-4 space-y-4">
           {messages.map((message, index) => (
             <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
-              {message.role === 'assistant' && (
+              {message.role === 'model' && (
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.a72d3c5f.png&w=48&q=75" alt="Oráculo" />
+                  {/* Atualizei a URL da imagem para uma mais estável */}
+                  <AvatarImage src="https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28.png" alt="Oráculo" />
                   <AvatarFallback>O</AvatarFallback>
                 </Avatar>
               )}
-              <div className={`rounded-lg px-4 py-2 max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+              {/* Adicionado 'break-words' para quebrar o texto corretamente */}
+              <div className={`rounded-lg px-4 py-2 max-w-[80%] break-words ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                 <p className="text-sm">{message.content}</p>
               </div>
             </div>
           ))}
-          {/* 4. Adicionar o elemento invisível no final da lista */}
-          <div ref={messagesEndRef} />
         </div>
         {loading && (
           <div className="flex items-center justify-center p-2">
