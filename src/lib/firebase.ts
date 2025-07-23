@@ -8,7 +8,7 @@ const firebaseConfig = {
   projectId: "orculo-financeiro-pupq1",
   appId: "1:163046454291:web:d713efd387c36b5cfcfbe6",
   storageBucket: "orculo-financeiro-pupq1.firebasestorage.app",
-  apiKey: "AIzaSyCLbLOWkFQoCxH7XtIRpt7FtCRcNZHX7YM",
+  apiKey: "AIzaSyAzNLSMmKp1otPG3b33fzhkqxBf3gY5UdI",
   authDomain: "orculo-financeiro-pupq1.firebaseapp.com",
   messagingSenderId: "163046454291"
 };
@@ -31,12 +31,13 @@ const signInWithGoogle = async () => {
 };
 
 const signOut = async () => {
-    try {
-        await firebaseSignOut(auth);
-    } catch (error) {
-        console.error("Erro ao fazer logout:", error);
-        throw error;
-    }
+  try {
+    await firebaseSignOut(auth);
+    console.log('Usuário deslogado');
+  } catch (error) {
+    console.error("Erro ao fazer logout:", error);
+    throw error;
+  }
 }
 
-export { app, auth, signInWithGoogle, signOut };
+export { app, auth, googleProvider, signInWithGoogle, signOut };
