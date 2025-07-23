@@ -1,141 +1,125 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { GoogleIcon } from "@/components/icons/google-icon";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
-'use client';
-
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/logo';
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { signInWithGoogle, auth } from '@/lib/firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { GoogleIcon } from '@/components/icons/google-icon';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [user, loading] = useAuthState(auth);
-
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
+  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    // Lógica de login com Firebase virá aqui
-    console.log('Login com:', { email, password });
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simula a chamada de API
-    // Se o login for bem-sucedido, redirecionar:
-    // router.push('/dashboard');
-    setIsLoading(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true);
+    setLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
-      // O useEffect cuidará do redirecionamento
-    } catch (err) {
-      setError('Falha ao fazer login com o Google.');
-      console.error(err);
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: "Sucesso!", description: "Login realizado com sucesso." });
+      router.push("/dashboard");
+    } catch (error: any) {
+      setError("Email ou senha inválidos. Tente novamente.");
+      toast({ title: "Erro de Login", description: "Email ou senha inválidos.", variant: "destructive" });
     } finally {
-      setIsGoogleLoading(false);
+        setLoading(false);
     }
   };
 
-  if (loading || user) {
-     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast({ title: "Sucesso!", description: "Login com Google realizado com sucesso." });
+      router.push("/dashboard");
+    } catch (error: any) {
+      setError("Falha ao fazer login com o Google.");
+      toast({ title: "Erro de Login", description: "Não foi possível fazer login com o Google.", variant: "destructive" });
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  if (authLoading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="w-full max-w-md mx-auto relative">
-        <div className="flex justify-center mb-6">
-            <Logo className="h-20 w-auto" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Oráculo Financeiro</h1>
+          <p className="text-gray-500">Acesse sua conta para continuar</p>
+        </div>
+        
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              required
+              className="text-blue-900"
+            />
+          </div>
+          <div>
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              required
+              className="text-blue-900"
+            />
+          </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="px-2 bg-white text-gray-500">Ou continue com</span>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-              Entre com suas credenciais para acessar sua conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-               <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isGoogleLoading}>
-                {isGoogleLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-4 w-4" /> Login com Google</>}
-              </Button>
-               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
-              <form onSubmit={handleLogin} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@exemplo.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="text-blue-900"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="text-blue-900"
-                  />
-                </div>
-                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : 'Login'}
-                </Button>
-              </form>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Não tem uma conta?{' '}
-              <Link href="/signup" className="underline">
-                Cadastre-se
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={loading}>
+          <GoogleIcon className="w-5 h-5 mr-2" />
+          Entrar com Google
+        </Button>
+
+        <p className="text-sm text-center text-gray-500">
+          Não tem uma conta?{" "}
+          <Link href="/signup" className="font-medium text-primary hover:underline">
+            Cadastre-se
+          </Link>
+        </p>
       </div>
     </div>
   );

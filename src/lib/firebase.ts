@@ -1,43 +1,20 @@
-
-'use client';
-
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+// src/lib/firebase.ts
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  projectId: "orculo-financeiro-pupq1",
-  appId: "1:163046454291:web:d713efd387c36b5cfcfbe6",
-  storageBucket: "orculo-financeiro-pupq1.firebasestorage.app",
-  apiKey: "AIzaSyAzNLSMmKp1otPG3b33fzhkqxBf3gY5UdI",
-  authDomain: "orculo-financeiro-pupq1.firebaseapp.com",
-  messagingSenderId: "163046454291"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Inicializa o Firebase
+// Inicializa o Firebase de forma segura (só se não foi inicializado ainda)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+const db = getFirestore(app);
 
-const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    console.log('Usuário logado:', user);
-    return user;
-  } catch (error) {
-    console.error("Erro ao fazer login com Google:", error);
-    throw error;
-  }
-};
-
-const signOut = async () => {
-  try {
-    await firebaseSignOut(auth);
-    console.log('Usuário deslogado');
-  } catch (error) {
-    console.error("Erro ao fazer logout:", error);
-    throw error;
-  }
-}
-
-export { app, auth, googleProvider, signInWithGoogle, signOut };
+export { app, auth, db };
