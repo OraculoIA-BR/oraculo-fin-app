@@ -50,11 +50,23 @@ export async function answerFinancialQuestion(
     },
   });
 
-  // Log para depuração
-  console.log("DEBUG - Resposta completa da IA:", JSON.stringify(llmResponse, null, 2));
+  // LOGA a resposta crua do LLM para investigação detalhada
+  console.log('DEBUG - Resposta bruta da IA:', JSON.stringify(llmResponse, null, 2));
 
-  // Use o campo output (conforme API mais recente do Genkit)
-  return {
-    answer: llmResponse.output as string,
-  };
+  // Tenta obter a resposta em várias formas conhecidas (output, text, choices, etc.)
+  let answer =
+    llmResponse.output ??
+    llmResponse.text ??
+    (llmResponse.choices && Array.isArray(llmResponse.choices) && llmResponse.choices[0]?.message?.content) ??
+    null;
+
+  if (!answer) {
+    console.warn("Resposta da IA vazia ou nula, verifique estrutura de llmResponse");
+    answer = "[⚠️ Resposta da IA não disponível]";
+  }
+
+  // LOGA o que será retornado para o frontend
+  console.log('DEBUG - Resposta entregue ao frontend:', answer);
+
+  return { answer };
 }
