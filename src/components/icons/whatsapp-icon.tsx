@@ -1,6 +1,11 @@
+// src/components/icons/whatsapp-icon.tsx
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ícone do WhatsApp em formato SVG.
+ * Utilizado no botão flutuante para contato via WhatsApp.
+ */
 export function WhatsAppIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

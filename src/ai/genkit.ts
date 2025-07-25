@@ -1,26 +1,21 @@
 // src/ai/genkit.ts
-import { configureGenkit } from '@genkit-ai/core';
+import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { genkitEval, GenkitTracer } from '@genkit-ai/evaluator';
-import { dotprompt } from '@genkit-ai/dotprompt';
+// REMOVIDO: O plugin genkitEval não é necessário para a geração padrão e é a causa provável do erro.
+// import { genkitEval } from '@genkit-ai/evaluator';
 
-// Esta é a configuração que estava faltando.
-// Ela inicializa o Genkit e informa quais plugins ele deve usar.
-export default configureGenkit({
+console.log('[Oraculo IA] Configurando o ambiente Genkit (Simplificado)...');
+
+// Exporta a instância configurada para ser usada em outros módulos.
+export const ai = genkit({
   plugins: [
-    // Registra o plugin do Google AI, que disponibiliza os modelos Gemini.
-    // É isso que permite que a função `generate` encontre o `gemini15Pro`.
+    // Apenas o plugin essencial para se comunicar com a API do Google.
     googleAI(),
-    // Estes são outros plugins úteis que podemos usar no futuro.
-    dotprompt(),
-    genkitEval(),
+    // REMOVIDO: genkitEval()
   ],
-  // Onde os traços de execução (logs) são armazenados.
   traceStore: {
-    provider: 'dev', // ou 'firebase' se você quiser logs persistentes
+    provider: 'dev',
   },
-  // Permite o log para depuração.
   logLevel: 'debug',
-  // Impede que erros em telemetria (que não afetam o resultado) quebrem a aplicação.
   enableTracingAndMetrics: true,
 });

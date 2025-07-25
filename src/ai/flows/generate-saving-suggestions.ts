@@ -1,27 +1,19 @@
+// src/ai/flows/generate-saving-suggestions.ts
 'use server';
 
-/**
- * @fileOverview Agente de IA que gera sugestões de economia personalizadas.
- *
- * - generateSavingSuggestions - Uma função que gera sugestões de economia para o usuário.
- * - GenerateSavingSuggestionsInput - O tipo de entrada para a função generateSavingSuggestions.
- * - GenerateSavingSuggestionsOutput - O tipo de retorno para a função generateSavingSuggestions.
- */
-
-import { generate } from '@genkit-ai/ai';
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { gemini15Pro } from '@genkit-ai/googleai';
-
+import { gemini15Flash } from '@genkit-ai/googleai';
 
 const GenerateSavingSuggestionsInputSchema = z.object({
   financialSituation: z
     .string()
     .describe(
-      'Descrição da situação financeira atual do usuário, incluindo renda, despesas, dívidas e economias.'
+      'Descrição da situação financeira atual do usuário (renda, despesas, etc.).'
     ),
   savingGoals: z
     .string()
-    .describe('Os objetivos de economia do usuário, por exemplo, comprar uma casa, aposentar-se mais cedo, etc.'),
+    .describe('Os objetivos de economia do usuário (ex: comprar uma casa).'),
 });
 export type GenerateSavingSuggestionsInput = z.infer<
   typeof GenerateSavingSuggestionsInputSchema
@@ -32,7 +24,7 @@ const GenerateSavingSuggestionsOutputSchema = z.object({
     z.object({
       title: z.string().describe('O título da sugestão de economia.'),
       description: z.string().describe('Uma descrição detalhada da sugestão.'),
-      example: z.string().describe('Um exemplo de como implementar a sugestão.'),
+      example: z.string().describe('Um exemplo prático de como implementar a sugestão.'),
     })
   ).describe('Uma lista de sugestões de economia personalizadas.'),
 });
@@ -41,20 +33,19 @@ export type GenerateSavingSuggestionsOutput = z.infer<
 >;
 
 /**
- * Gera sugestões de economia personalizadas.
- * @param input Objeto contendo a situação financeira e os objetivos do usuário.
- * @returns Uma lista de sugestões.
+ * Gera sugestões de economia personalizadas com base na situação financeira do usuário.
  */
 export async function generateSavingSuggestions(
   input: GenerateSavingSuggestionsInput
 ): Promise<GenerateSavingSuggestionsOutput> {
 
-  const llmResponse = await generate({
-    model: gemini15Pro,
+  const llmResponse = await ai.generate({
+    model: gemini15Flash,
     prompt: `
-      Você é um consultor financeiro pessoal. Seu objetivo é fornecer sugestões de economia personalizadas para o usuário,
-      com base em sua situação financeira e metas de economia. Forneça exemplos claros de como implementar cada sugestão.
-      Responda sempre em Português do Brasil.
+      Você é um consultor financeiro. Sua tarefa é fornecer sugestões de economia
+      personalizadas com base na situação financeira e metas do usuário.
+      Forneça exemplos claros para cada sugestão.
+      Responda sempre em Portugês do Brasil.
 
       **Situação Financeira:** 
       ${input.financialSituation}
@@ -72,5 +63,6 @@ export async function generateSavingSuggestions(
     },
   });
 
-  return llmResponse.output()!;
+  // CORREÇÃO FINAL: O resultado agora é uma propriedade '.output', não um método.
+  return llmResponse.output!;
 }

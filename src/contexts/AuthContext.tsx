@@ -24,30 +24,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-
-      // Lógica de redirecionamento reativada
-      const isAuthPage = pathname === "/login" || pathname === "/signup";
-      
-      if (user) {
-        // Se o usuário está logado e na página de login/cadastro, vai para o dashboard
-        if (isAuthPage) {
-          router.push("/dashboard");
-        }
-      } else {
-        // Se não está logado e tenta acessar uma página protegida, vai para o login
-        // (Ignora a página inicial '/')
-        if (pathname !== "/" && !isAuthPage) {
-           router.push("/login");
-        }
-      }
     });
-
+    // Garante que a inscrição seja desfeita quando o componente for desmontado.
     return () => unsubscribe();
-  }, [pathname, router, user]);
+  }, []);
 
-  const value = { user, loading };
+  useEffect(() => {
+    // Evita o redirecionamento enquanto a autenticação ainda está carregando.
+    if (loading) {
+      return;
+    }
+    
+    const isAuthPage = pathname === "/login" || pathname === "/signup";
 
-  // Loader global para páginas protegidas enquanto a autenticação é verificada
+    // Se o usuário está autenticado e tenta acessar as páginas de login/cadastro,
+    // ele é redirecionado para o dashboard.
+    if (user && isAuthPage) {
+      router.push("/dashboard");
+    } 
+    // Se o usuário não está autenticado e tenta acessar uma página protegida
+    // (qualquer uma, exceto a inicial, login ou signup), ele é redirecionado para o login.
+    else if (!user && !isAuthPage && pathname !== "/") {
+      router.push("/login");
+    }
+  }, [user, loading, pathname, router]);
+
+
+  // Exibe um loader em tela cheia para páginas protegidas enquanto o estado de autenticação é verificado.
+  // Isso evita um "flash" da página de login antes do redirecionamento para o dashboard.
   if (loading && pathname !== "/" && pathname !== "/login" && pathname !== "/signup") {
     return (
         <div className="flex items-center justify-center h-screen bg-background">
@@ -56,13 +60,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
+// Hook customizado para acessar o contexto de autenticação.
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 };

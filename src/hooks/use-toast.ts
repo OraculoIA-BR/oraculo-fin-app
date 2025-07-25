@@ -1,6 +1,6 @@
 "use client"
 
-// Inspired by react-hot-toast library
+// Inspirado na biblioteca react-hot-toast
 import * as React from "react"
 
 import type {
@@ -8,8 +8,11 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
+// Número máximo de toasts visíveis ao mesmo tempo.
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// Tempo em milissegundos para remover o toast do DOM após ser dispensado.
+// O valor original de 1000000ms foi ajustado para 5000ms (5 segundos) para uma experiência de usuário mais padrão.
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -18,6 +21,7 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
+// Tipos de ação para o reducer, garantindo consistência.
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
@@ -25,6 +29,7 @@ const actionTypes = {
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
 
+// Contador para gerar IDs únicos para os toasts.
 let count = 0
 
 function genId() {
@@ -34,6 +39,7 @@ function genId() {
 
 type ActionType = typeof actionTypes
 
+// Define as ações que podem ser enviadas ao reducer.
 type Action =
   | {
       type: ActionType["ADD_TOAST"]
@@ -52,12 +58,14 @@ type Action =
       toastId?: ToasterToast["id"]
     }
 
+// Estrutura do estado gerenciado pelo reducer.
 interface State {
   toasts: ToasterToast[]
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
+// Adiciona um toast à fila de remoção após o tempo definido em TOAST_REMOVE_DELAY.
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
@@ -74,6 +82,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+// O reducer que gerencia o estado dos toasts.
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -93,8 +102,8 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // Efeito colateral: agenda a remoção do toast.
+      // O autor original optou por manter aqui para simplicidade.
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {

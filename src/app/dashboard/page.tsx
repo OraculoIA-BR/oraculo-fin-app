@@ -1,21 +1,18 @@
+// src/app/dashboard/page.tsx
 "use client";
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { getAuth, signOut } from "firebase/auth";
-import { useToast } from '@/hooks/use-toast';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { SavingSuggestions } from '@/components/dashboard/saving-suggestions';
 import { FinancialSearch } from '@/components/dashboard/financial-search';
-import { WhatsAppFAB } from '@/components/dashboard/whatsapp-fab';
 import { CategoryCharts } from '@/components/dashboard/category-charts';
 import { generateSavingSuggestions, type GenerateSavingSuggestionsOutput } from '@/ai/flows/generate-saving-suggestions';
-import { Loader2, LogOut } from 'lucide-react';
-import { Logo } from '@/components/logo';
-import { Button } from '@/components/ui/button';
+import { DashboardLayout } from '@/components/dashboard/layout';
+import { Loader2 } from 'lucide-react';
 
+// Função para buscar sugestões de economia da IA.
+// Os dados foram mocados para fins de demonstração.
 async function getSavingSuggestions(): Promise<GenerateSavingSuggestionsOutput> {
   return generateSavingSuggestions({
     financialSituation: 'Renda mensal de R$5000, despesas fixas de R$2500, despesas variáveis de R$1500.',
@@ -24,80 +21,43 @@ async function getSavingSuggestions(): Promise<GenerateSavingSuggestionsOutput> 
 }
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const { toast } = useToast();
   const [suggestions, setSuggestions] = React.useState<GenerateSavingSuggestionsOutput['suggestions']>([]);
   const [dataLoading, setDataLoading] = React.useState(true);
-  const auth = getAuth();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-      router.push('/login');
-    } catch (error) {
-      toast({
-        title: "Erro no Logout",
-        description: "Não foi possível fazer o logout. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  React.useEffect(() => {
-    // A verificação de login foi desativada para desenvolvimento.
-  }, [user, loading, router]);
-
+  // Busca as sugestões de economia quando o componente é montado.
   React.useEffect(() => {
     getSavingSuggestions()
       .then(output => setSuggestions(output.suggestions))
       .finally(() => setDataLoading(false));
   }, []);
 
-  if (loading || dataLoading) {
+  // Exibe um loader enquanto os dados da IA estão sendo carregados.
+  if (dataLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-        <Logo />
-        <Loader2 className="h-10 w-10 animate-spin text-primary mt-4" />
-        <p className="text-gray-500 mt-2">Carregando seu dashboard...</p>
-      </div>
+      <DashboardLayout>
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-2 text-gray-500">Analisando suas finanças...</p>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-            <Logo />
-            <div className="flex items-center gap-4">
-              {user && <span className="text-sm text-gray-500 hidden md:block">Olá, {user.email}</span>}
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-        </div>
-      </header>
-      <main className="flex-1 p-4 md:p-8">
-        <div className="container mx-auto">
-          <h1 className="text-3xl font-bold text-blue-900 mb-6">Seu Painel Financeiro</h1>
-          <div className="grid gap-8">
-            <div className="grid md:grid-cols-2 gap-6">
-              <SpendingChart />
-              <RecentTransactions />
-            </div>
-            <FinancialSearch />
-            <SummaryCards />
-            <SavingSuggestions suggestions={suggestions} />
-            <CategoryCharts />
+    <DashboardLayout>
+      <h1 className="text-3xl font-bold text-blue-900 mb-6">Seu Painel Financeiro</h1>
+      <div className="grid gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <SpendingChart />
           </div>
+          <RecentTransactions />
         </div>
-      </main>
-      <WhatsAppFAB />
-    </div>
+        <FinancialSearch />
+        <SummaryCards />
+        <SavingSuggestions suggestions={suggestions} />
+        <CategoryCharts />
+      </div>
+    </DashboardLayout>
   );
 }

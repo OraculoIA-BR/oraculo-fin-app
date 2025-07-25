@@ -1,7 +1,11 @@
-
+// src/components/icons/google-icon.tsx
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ícone do Google em formato SVG.
+ * Utilizado nos botões de login e cadastro com o Google.
+ */
 export function GoogleIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 

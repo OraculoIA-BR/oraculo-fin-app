@@ -12,10 +12,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // Define a fonte 'sans' como a principal, usando a variável CSS '--font-inter'.
+        // O fallback para as fontes padrão do sistema é mantido.
         sans: ['var(--font-inter)', ...fontFamily.sans],
       },
       colors: {
-        'oraculo-blue': '#0B1F75', // Adicionando a nova cor
+        // As cores são definidas em 'globals.css' e referenciadas aqui.
+        // Isso permite a criação de temas (claro/escuro) de forma mais fácil.
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

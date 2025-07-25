@@ -1,7 +1,8 @@
+// src/app/signup/page.tsx
 "use client";
 import { useState } from "react";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "@/lib/firebase"; 
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,56 +11,69 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-
+import { Logo } from "@/components/logo";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
+  // Mapeamento de erros do Firebase para mensagens amigáveis.
+  const getFriendlyErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+      case "auth/email-already-in-use":
+        return "Este e-mail já está cadastrado. Tente fazer login.";
+      case "auth/invalid-email":
+        return "O formato do e-mail é inválido.";
+      case "auth/weak-password":
+        return "A senha é muito fraca. Use pelo menos 6 caracteres.";
+      case "auth/network-request-failed":
+        return "Falha de conexão. Verifique sua internet e tente novamente.";
+      default:
+        return "Ocorreu um erro inesperado durante o cadastro. Tente novamente.";
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
       toast({ title: "Erro de Cadastro", description: "As senhas não coincidem.", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: "Sucesso!", description: "Sua conta foi criada com sucesso." });
+      // O redirecionamento é tratado pelo AuthContext.
     } catch (error: any) {
-      console.error("Firebase Signup Error:", error);
-      const errorMessage = error.message || "Ocorreu um erro desconhecido.";
-      setError(errorMessage);
-      toast({ title: "Erro de Cadastro", description: errorMessage, variant: "destructive" });
+      console.error("Erro no Cadastro com E-mail:", error.code, error.message);
+      const message = getFriendlyErrorMessage(error.code);
+      toast({ title: "Erro de Cadastro", description: message, variant: "destructive" });
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
-  
+
   const handleGoogleLogin = async () => {
     setLoading(true);
-    setError(null);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast({ title: "Sucesso!", description: "Cadastro com Google realizado com sucesso." });
-    } catch (error: any)      {
-      console.error("Google Login Error:", error);
-      const errorMessage = error.message || "Falha ao fazer o cadastro com o Google.";
-      setError(errorMessage);
-      toast({ title: "Erro de Cadastro", description: errorMessage, variant: "destructive" });
+      // O redirecionamento é tratado pelo AuthContext.
+    } catch (error: any) {
+      console.error("Erro no Cadastro com Google:", error.code, error.message);
+      const message = getFriendlyErrorMessage(error.code);
+      toast({ title: "Erro de Cadastro", description: message, variant: "destructive" });
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
-  
+
+  // Exibe um loader enquanto a autenticação está sendo verificada ou se o usuário já está logado.
   if (authLoading || user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -72,8 +86,11 @@ export default function SignupPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Crie sua Conta</h1>
-          <p className="text-gray-500">Comece a organizar suas finanças</p>
+           <div className="inline-block mb-4">
+            <Logo />
+          </div>
+          <h1 className="text-2xl font-bold text-blue-900">Crie sua Conta</h1>
+          <p className="text-gray-500">Comece a organizar suas finanças hoje mesmo.</p>
         </div>
         
         <form onSubmit={handleSignup} className="space-y-4">
@@ -86,6 +103,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               required
+              disabled={loading}
               className="text-blue-900"
             />
           </div>
@@ -98,6 +116,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
               required
+              disabled={loading}
               className="text-blue-900"
             />
           </div>
@@ -110,12 +129,12 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Repita a senha"
               required
+              disabled={loading}
               className="text-blue-900"
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Criando conta..." : "Criar Conta"}
+          <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-700" disabled={loading}>
+             {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando conta...</> : "Criar Conta"}
           </Button>
         </form>
 
@@ -124,18 +143,18 @@ export default function SignupPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="px-2 bg-white text-gray-500">Ou continue com</span>
+            <span className="px-2 bg-white text-gray-500">Ou cadastre-se com</span>
           </div>
         </div>
 
         <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={loading}>
-          <GoogleIcon className="w-5 h-5 mr-2" />
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="w-5 h-5 mr-2" />}
           Cadastrar com Google
         </Button>
 
         <p className="text-sm text-center text-gray-500">
           Já tem uma conta?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link href="/login" className="font-medium text-blue-600 hover:underline">
             Faça login
           </Link>
         </p>

@@ -1,27 +1,45 @@
+// tsconfig.json
 {
   "compilerOptions": {
+    // Define a versão do ECMAScript de destino para o código compilado.
     "target": "ES2017",
+    // Lista de bibliotecas de declaração a serem incluídas na compilação.
     "lib": ["dom", "dom.iterable", "esnext"],
+    // Permite a compilação de arquivos JavaScript.
     "allowJs": true,
+    // Ignora a verificação de tipos em arquivos de declaração (.d.ts).
     "skipLibCheck": true,
+    // Habilita todas as opções de verificação de tipo estritas.
     "strict": true,
+    // Não emite arquivos de saída (o Next.js cuida disso).
     "noEmit": true,
+    // Permite a interoperabilidade entre módulos CommonJS e ES.
     "esModuleInterop": true,
+    // Especifica a geração de código do módulo.
     "module": "esnext",
+    // Especifica a estratégia de resolução de módulos.
     "moduleResolution": "bundler",
+    // Permite a importação de módulos a partir de arquivos .json.
     "resolveJsonModule": true,
+    // Garante que cada arquivo possa ser transpilado sem depender de outros.
     "isolatedModules": true,
+    // Preserva a saída JSX para ser processada por outro transformador (como o Babel).
     "jsx": "preserve",
+    // Habilita a compilação incremental.
     "incremental": true,
+    // Configuração para o plugin do Next.js.
     "plugins": [
       {
         "name": "next"
       }
     ],
+    // Define um mapeamento de caminhos para os módulos.
     "paths": {
       "@/*": ["./src/*"]
     }
   },
+  // Especifica os arquivos a serem incluídos no programa TypeScript.
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  // Especifica os arquivos a serem excluídos da compilação.
   "exclude": ["node_modules"]
 }
