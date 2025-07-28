@@ -1,4 +1,3 @@
-// src/components/dashboard/financial-search.tsx
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,26 +16,21 @@ type Message = {
   content: string;
 };
 
-/**
- * Componente de chat com IA para responder a perguntas financeiras.
- */
 export function FinancialSearch() {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  // Efeito para rolar para a última mensagem.
   useEffect(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Efeito para definir a mensagem de boas-vindas.
   useEffect(() => {
     const userName = user?.displayName || user?.email?.split('@')[0] || 'usuário';
     setMessages([{
@@ -55,30 +49,35 @@ export function FinancialSearch() {
     setQuery('');
 
     try {
+      // Remove mensagem de boas-vindas do histórico enviado à IA
+      const historyForAI = [...messages, userMessage].filter(
+        (msg) => !msg.content.startsWith('Olá,')
+      );
+
       const result = await handleFinancialQuestion({
         question: query,
-        history: messages,
+        history: historyForAI,
         userEmail: user?.email,
       });
 
-      // LOG para depurar a resposta recebida do backend.
       console.log("DEBUG FRONTEND - Resposta do backend:", result);
 
       const assistantMessage: Message = {
         role: 'model',
-        content: result?.answer?.trim() ? result.answer : '[⚠️ Resposta da IA ausente!]',
+        content: result && typeof result.answer === 'string' && result.answer.trim()
+          ? result.answer
+          : '[⚠️ Resposta da IA ausente!]',
       };
       setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error: any) {
-      console.error("Erro na busca da IA:", error);
+      console.error("Erro ao chamar a Server Action no frontend:", error);
       toast({
-        title: 'Erro ao buscar resposta',
-        description: error.message || 'Não foi possível se conectar à IA. Tente novamente.',
+        title: 'Erro de Comunicação',
+        description: error.message || 'Não foi possível se conectar ao backend. Tente novamente.',
         variant: 'destructive',
       });
-      // Remove a mensagem do usuário se a IA falhar.
-      setMessages(prev => prev.filter(m => m !== userMessage));
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setLoading(false);
     }

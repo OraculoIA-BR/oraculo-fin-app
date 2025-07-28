@@ -432,13 +432,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$
 ;
 ;
 const firebaseConfig = {
-    apiKey: ("TURBOPACK compile-time value", "AIzaSyAmsrHbzO0hZgYwZssmgSXh3vWg0Gr_kJo"),
-    authDomain: ("TURBOPACK compile-time value", "oraculo-6962d.firebaseapp.com"),
-    projectId: ("TURBOPACK compile-time value", "oraculo-6962d"),
-    storageBucket: ("TURBOPACK compile-time value", "oraculo-6962d.appspot.com"),
-    messagingSenderId: ("TURBOPACK compile-time value", "688937341111"),
-    appId: ("TURBOPACK compile-time value", "1:688937341111:web:2ae46838d1c123ccacfd32"),
-    measurementId: ("TURBOPACK compile-time value", "G-ZB6B9M8P2V")
+    apiKey: ("TURBOPACK compile-time value", "AIzaSyCLbLOWkFQoCxH7XtIRpt7FtCRcNZHX7YM"),
+    authDomain: ("TURBOPACK compile-time value", "orculo-financeiro-pupq1.firebaseapp.com"),
+    projectId: ("TURBOPACK compile-time value", "orculo-financeiro-pupq1"),
+    storageBucket: ("TURBOPACK compile-time value", "orculo-financeiro-pupq1.appspot.com"),
+    messagingSenderId: ("TURBOPACK compile-time value", "163046454291"),
+    appId: ("TURBOPACK compile-time value", "1:163046454291:web:d713efd387c36b5cfcfbe6"),
+    measurementId: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 const app = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$app$2f$dist$2f$esm$2f$index$2e$esm2017$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getApps"])().length ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$app$2f$dist$2f$esm$2f$index$2e$esm2017$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getApp"])() : (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$app$2f$dist$2f$esm$2f$index$2e$esm2017$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["initializeApp"])(firebaseConfig);
 const db = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm2017$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getFirestore"])(app);

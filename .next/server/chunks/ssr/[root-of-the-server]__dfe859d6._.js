@@ -205,29 +205,52 @@ module.exports = mod;
 
 var { g: global, __dirname } = __turbopack_context__;
 {
-// src/ai/genkit.ts
 __turbopack_context__.s({
-    "ai": (()=>ai)
+    "ai": (()=>ai),
+    "generateSavingSuggestions": (()=>generateSavingSuggestions)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <module evaluation>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/genkit.js [app-rsc] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/common.js [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/googleai/lib/index.mjs [app-rsc] (ecmascript) <module evaluation>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/googleai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 ;
 ;
-// REMOVIDO: O plugin genkitEval não é necessário para a geração padrão e é a causa provável do erro.
-// import { genkitEval } from '@genkit-ai/evaluator';
-console.log('[Oraculo IA] Configurando o ambiente Genkit (Simplificado)...');
+console.log('[Oraculo IA] Configurando o ambiente Genkit (Configuração Padrão).');
+console.log('[Oraculo IA] O plugin tentará encontrar a GOOGLE_API_KEY no ambiente.');
 const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["genkit"])({
     plugins: [
-        // Apenas o plugin essencial para se comunicar com a API do Google.
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__["googleAI"])()
     ],
     traceStore: {
         provider: 'dev'
     },
-    logLevel: 'debug',
-    enableTracingAndMetrics: true
+    logLevel: 'debug'
+});
+const generateSavingSuggestions = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["defineFlow"])({
+    name: "generateSavingSuggestions",
+    input: {
+        question: "string",
+        history: "any[]"
+    },
+    output: {
+        answer: "string"
+    }
+}, async ({ question, history })=>{
+    // Chamada direta ao Gemini via plugin googleAI
+    const response = await ai.invoke("chat", {
+        model: "gemini-pro",
+        messages: [
+            ...history,
+            {
+                role: "user",
+                content: question
+            }
+        ]
+    });
+    return {
+        answer: response.content ?? ""
+    };
 });
 }}),
 "[project]/src/ai/flows/generate-saving-suggestions.ts [app-rsc] (ecmascript)": ((__turbopack_context__) => {
@@ -299,6 +322,7 @@ async function generateSavingSuggestions(input) {
 
 var { g: global, __dirname } = __turbopack_context__;
 {
+// src/ai/flows/financial-question-answering.ts
 __turbopack_context__.s({
     "answerFinancialQuestion": (()=>answerFinancialQuestion)
 });
@@ -322,47 +346,58 @@ const financialQuestionSchema = __TURBOPACK__imported__module__$5b$project$5d2f$
     userEmail: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().optional()
 });
 async function answerFinancialQuestion(input) {
-    const genkitHistory = input.history?.map((msg)=>({
-            role: msg.role,
-            parts: [
-                {
-                    text: msg.content
-                }
-            ]
-        })) || [];
-    const llmResponse = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].generate({
-        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$gemini$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["gemini15Flash"],
-        history: genkitHistory,
-        prompt: `
-      Você é Oráculo, um especialista em finanças pessoais.
-      Sua tarefa é responder a perguntas sobre as finanças do usuário.
-      O usuário está logado com o e-mail: ${input.userEmail}.
+    // --- INÍCIO DA CORREÇÃO: Bloco try...catch ---
+    try {
+        const genkitHistory = input.history?.map((msg)=>({
+                role: msg.role,
+                parts: [
+                    {
+                        text: msg.content
+                    }
+                ]
+            })) || [];
+        // Esta é a chamada que estava falhando silenciosamente.
+        const llmResponse = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].generate({
+            model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$gemini$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["gemini15Flash"],
+            history: genkitHistory,
+            prompt: `
+        Você é Oráculo, um especialista em finanças pessoais.
+        Sua tarefa é responder a perguntas sobre as finanças do usuário.
+        O usuário está logado com o e-mail: ${input.userEmail}.
 
-      **REGRAS:**
-      1.  Responda sempre em Português do Brasil.
-      2.  Seja claro e objetivo.
-      3.  Se a pergunta não for sobre finanças, recuse educadamente.
+        **REGRAS:**
+        1.  Responda sempre em Português do Brasil.
+        2.  Seja claro e objetivo.
+        3.  Se a pergunta não for sobre finanças, recuse educadamente.
 
-      **Pergunta do Usuário:**
-      ${input.question}
-    `,
-        config: {
-            temperature: 0.5
+        **Pergunta do Usuário:**
+        ${input.question}
+      `,
+            config: {
+                temperature: 0.5
+            }
+        });
+        const answer = llmResponse.text();
+        if (!answer) {
+            console.warn("Resposta da IA retornou vazia.");
+            return {
+                answer: "[⚠️ A IA não forneceu uma resposta. Tente reformular a pergunta.]"
+            };
         }
-    });
-    // LOGA a resposta crua do LLM para investigação detalhada
-    console.log('DEBUG - Resposta bruta da IA:', JSON.stringify(llmResponse, null, 2));
-    // Tenta obter a resposta em várias formas conhecidas (output, text, choices, etc.)
-    let answer = llmResponse.output ?? llmResponse.text ?? (llmResponse.choices && Array.isArray(llmResponse.choices) && llmResponse.choices[0]?.message?.content) ?? null;
-    if (!answer) {
-        console.warn("Resposta da IA vazia ou nula, verifique estrutura de llmResponse");
-        answer = "[⚠️ Resposta da IA não disponível]";
+        console.log('DEBUG - Resposta entregue ao frontend:', answer);
+        return {
+            answer
+        };
+    } catch (error) {
+        // Se qualquer coisa dentro do 'try' falhar, este bloco será executado.
+        console.error("ERRO CRÍTICO NO FLUXO DE IA:", error);
+        // Retorna uma resposta de erro estruturada para o frontend.
+        // Isso evita o 'undefined' e mostra uma mensagem útil para o usuário.
+        return {
+            answer: "Desculpe, ocorreu um erro de comunicação com o serviço de IA. Verifique as configurações de API ou a sua cota de uso e tente novamente."
+        };
     }
-    // LOGA o que será retornado para o frontend
-    console.log('DEBUG - Resposta entregue ao frontend:', answer);
-    return {
-        answer
-    };
+// --- FIM DA CORREÇÃO ---
 }
 }}),
 "[project]/src/app/actions.ts [app-rsc] (ecmascript)": ((__turbopack_context__) => {
@@ -390,23 +425,46 @@ const messageSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
     ]),
     content: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string()
 });
-// CORREÇÃO: Adicionado 'userEmail' ao schema para corresponder aos dados enviados pelo cliente.
 const financialQuestionSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
     question: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(1, 'A pergunta não pode estar vazia.'),
     history: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].array(messageSchema).optional(),
     userEmail: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().optional()
 });
 async function handleFinancialQuestion(input) {
-    // Adicionando um log para depurar a entrada.
-    console.log("Input recebido na Server Action:", input);
-    const validatedInput = financialQuestionSchema.safeParse(input);
-    if (!validatedInput.success) {
-        console.error('Erro de validação do Zod:', validatedInput.error.flatten().fieldErrors);
-        throw new Error('Entrada inválida para a pergunta financeira.');
+    console.log('--------------------------------------------------');
+    console.log('[SERVER ACTION] Execução iniciada.');
+    console.log('[SERVER ACTION] Input recebido do frontend:', JSON.stringify(input, null, 2));
+    try {
+        const validatedInput = financialQuestionSchema.safeParse(input);
+        if (!validatedInput.success) {
+            console.error('[SERVER ACTION] ERRO: Falha na validação do Zod.');
+            console.error(validatedInput.error.flatten().fieldErrors);
+            throw new Error('Entrada inválida para a pergunta financeira.');
+        }
+        console.log('[SERVER ACTION] Validação do input bem-sucedida.');
+        console.log('[SERVER ACTION] Chamando o fluxo de IA "answerFinancialQuestion"...');
+        // Chama o fluxo de IA. Este é o ponto onde a falha provavelmente ocorre.
+        const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$flows$2f$financial$2d$question$2d$answering$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["answerFinancialQuestion"])(validatedInput.data);
+        if (!result || typeof result.answer !== 'string') {
+            console.error('[SERVER ACTION] ERRO: O fluxo de IA retornou um valor inesperado ou inválido.', result);
+            return {
+                answer: '[⚠️ Ocorreu um erro interno na IA. O resultado retornado era inválido.]'
+            };
+        }
+        console.log('[SERVER ACTION] Fluxo de IA executado com sucesso.');
+        console.log('[SERVER ACTION] Resultado a ser enviado para o frontend:', JSON.stringify(result, null, 2));
+        console.log('--------------------------------------------------');
+        return result;
+    } catch (error) {
+        console.error('[SERVER ACTION] ERRO CATASTRÓFICO: Uma exceção foi capturada na Server Action.');
+        console.error('Isso geralmente acontece se o fluxo de IA falhar de forma crítica.');
+        console.error('Erro original:', error);
+        console.log('--------------------------------------------------');
+        // GARANTE que nunca retornaremos 'undefined'.
+        return {
+            answer: "[⚠️ Desculpe, o serviço de IA encontrou um erro crítico. Verifique os logs do servidor.]"
+        };
     }
-    // A partir daqui, usamos `validatedInput.data` que contém os dados limpos.
-    const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$flows$2f$financial$2d$question$2d$answering$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["answerFinancialQuestion"])(validatedInput.data);
-    return result;
 }
 ;
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([

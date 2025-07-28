@@ -1,17 +1,18 @@
 // src/app/actions.ts
 'use server';
 
-import { answerFinancialQuestion } from '@/ai/flows/financial-question-answering';
+import { answerFinancialQuestion, type FinancialQuestionOutput } from '@/ai/flows/financial-question-answering';
+import { generateSavingSuggestions, type GenerateSavingSuggestionsOutput } from '@/ai/flows/generate-saving-suggestions';
 import { z } from 'zod';
 
+// --- Schema para o fluxo de Perguntas e Respostas ---
 const messageSchema = z.object({
   role: z.enum(['user', 'model']),
   content: z.string(),
 });
 
-// CORREÇÃO: Adicionado 'userEmail' ao schema para corresponder aos dados enviados pelo cliente.
 const financialQuestionSchema = z.object({
-  question: z.string().min(1, 'A pergunta não pode estar vazia.'),
+  question: z.string(),
   history: z.array(messageSchema).optional(),
   userEmail: z.string().optional(),
 });
@@ -19,18 +20,52 @@ const financialQuestionSchema = z.object({
 /**
  * Server Action para lidar com perguntas financeiras do usuário.
  */
-export async function handleFinancialQuestion(input: z.infer<typeof financialQuestionSchema>) {
-  // Adicionando um log para depurar a entrada.
-  console.log("Input recebido na Server Action:", input);
-
-  const validatedInput = financialQuestionSchema.safeParse(input);
-
-  if (!validatedInput.success) {
-    console.error('Erro de validação do Zod:', validatedInput.error.flatten().fieldErrors);
-    throw new Error('Entrada inválida para a pergunta financeira.');
+export async function handleFinancialQuestion(
+  input: z.infer<typeof financialQuestionSchema>
+): Promise<FinancialQuestionOutput> {
+  try {
+    const validatedInput = financialQuestionSchema.safeParse(input);
+    if (!validatedInput.success) {
+      throw new Error('Entrada inválida para a pergunta financeira.');
+    }
+    
+    const result = await answerFinancialQuestion(validatedInput.data);
+    
+    if (!result || typeof result.answer !== 'string') {
+        return { answer: '[⚠️ Ocorreu um erro interno na IA. O resultado retornado era inválido.]' };
+    }
+    return result;
+  } catch (error) {
+    console.error('[ACTION ERROR - handleFinancialQuestion]:', error);
+    return { 
+      answer: "[⚠️ Desculpe, o serviço de IA encontrou um erro crítico. Verifique os logs do servidor.]" 
+    };
   }
+}
 
-  // A partir daqui, usamos `validatedInput.data` que contém os dados limpos.
-  const result = await answerFinancialQuestion(validatedInput.data);
-  return result;
+// --- Schema para o fluxo de Sugestões de Economia ---
+const generateSavingSuggestionsInputSchema = z.object({
+  financialSituation: z.string(),
+  savingGoals: z.string(),
+});
+
+/**
+ * Server Action para buscar sugestões de economia.
+ * Esta função roda exclusivamente no servidor.
+ */
+export async function getSuggestionsAction(
+  input: z.infer<typeof generateSavingSuggestionsInputSchema>
+): Promise<GenerateSavingSuggestionsOutput> {
+  try {
+    const validatedInput = generateSavingSuggestionsInputSchema.safeParse(input);
+    if (!validatedInput.success) {
+      throw new Error('Entrada inválida para sugestão de economia.');
+    }
+    const result = await generateSavingSuggestions(validatedInput.data);
+    return result;
+  } catch (error) {
+    console.error('[ACTION ERROR - getSuggestionsAction]:', error);
+    // Retorna um objeto válido mesmo em caso de erro para não quebrar o frontend.
+    return { suggestions: [] };
+  }
 }
