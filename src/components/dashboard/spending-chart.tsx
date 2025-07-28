@@ -6,24 +6,23 @@ import { Pie, PieChart, Sector } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
-// Dados de exemplo para o gráfico.
+// Defina cores fixas para garantir correspondência
 const chartData = [
-  { category: "Alimentação", amount: 1240.50, fill: "var(--color-food)" },
-  { category: "Transporte", amount: 350.80, fill: "var(--color-transport)" },
-  { category: "Lazer", amount: 480.00, fill: "var(--color-leisure)" },
-  { category: "Contas", amount: 850.25, fill: "var(--color-bills)" },
-  { category: "Compras", amount: 620.00, fill: "var(--color-shopping)" },
+  { category: "Alimentação", amount: 1240.50, fill: "#2563eb" },   // azul
+  { category: "Transporte", amount: 350.80, fill: "#fbbf24" },     // amarelo
+  { category: "Lazer", amount: 480.00, fill: "#10b981" },          // verde
+  { category: "Contas", amount: 850.25, fill: "#f472b6" },         // rosa
+  { category: "Compras", amount: 620.00, fill: "#f59e42" }         // laranja
 ];
 
-// Configuração das categorias do gráfico.
 const chartConfig = {
   amount: { label: "Valor (R$)" },
-  food: { label: "Alimentação", color: "hsl(var(--chart-1))" },
-  transport: { label: "Transporte", color: "hsl(var(--chart-2))" },
-  leisure: { label: "Lazer", color: "hsl(var(--chart-3))" },
-  bills: { label: "Contas", color: "hsl(var(--chart-4))" },
-  shopping: { label: "Compras", color: "hsl(var(--chart-5))" },
-} satisfies ChartConfig;
+  food: { label: "Alimentação", color: "#2563eb" },
+  transport: { label: "Transporte", color: "#fbbf24" },
+  leisure: { label: "Lazer", color: "#10b981" },
+  bills: { label: "Contas", color: "#f472b6" },
+  shopping: { label: "Compras", color: "#f59e42" },
+};
 
 export function SpendingChart() {
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -32,7 +31,7 @@ export function SpendingChart() {
     return chartData.reduce((acc, curr) => acc + curr.amount, 0);
   }, []);
   
-  const activeCategory = chartData[activeIndex].category as keyof typeof chartConfig;
+  const activeCategory = chartData[activeIndex].category;
 
   return (
     <Card className="flex flex-col h-full">
@@ -70,18 +69,34 @@ export function SpendingChart() {
       </CardContent>
       <CardContent className="flex-1 p-6 text-sm flex flex-col items-center justify-end">
         <div className="text-center">
-            <p className="text-lg font-bold" style={{ color: chartConfig[activeCategory]?.color }}>
-            {chartConfig[activeCategory]?.label}
-            </p>
-            <p className="text-muted-foreground">
+          <p className="text-lg font-bold" style={{ color: chartData[activeIndex].fill }}>
+            {chartData[activeIndex].category}
+          </p>
+          <p className="text-muted-foreground">
             {chartData[activeIndex].amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </p>
+          </p>
         </div>
-         <div className="w-full mt-4">
-            <div className="flex justify-between items-center font-medium border-t pt-2">
-                <span>Total:</span>
-                <span>{totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        <div className="w-full mt-4">
+          <div className="flex justify-between items-center font-medium border-t pt-2">
+            <span>Total:</span>
+            <span>{totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          </div>
+        </div>
+        {/* LEGENDA DAS CATEGORIAS: cor, nome e valor */}
+        <div className="flex flex-wrap gap-4 mt-4 justify-center">
+          {chartData.map((item) => (
+            <div key={item.category} className="flex items-center gap-2 min-w-[120px]">
+              <span
+                className="inline-block w-4 h-4 rounded-full border"
+                style={{ background: item.fill, borderColor: item.fill }}
+                aria-label={item.category}
+              />
+              <span className="text-xs font-medium">{item.category}</span>
+              <span className="text-xs text-muted-foreground">
+                {item.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
             </div>
+          ))}
         </div>
       </CardContent>
     </Card>

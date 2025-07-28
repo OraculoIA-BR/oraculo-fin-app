@@ -27,7 +27,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
-    "firebase": "^11.9.1",
+    "firebase": "^11.10.0",
+    "firebase-admin": "^13.4.0",
     "genkit": "^1.15.2",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",
@@ -49,6 +50,23 @@
     "genkit-cli": "^1.15.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
-  }
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "description": "This is a NextJS starter in Firebase Studio.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OraculoIA-BR/oraculo-fin-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OraculoIA-BR/oraculo-fin-app/issues"
+  },
+  "homepage": "https://github.com/OraculoIA-BR/oraculo-fin-app#readme"
 }

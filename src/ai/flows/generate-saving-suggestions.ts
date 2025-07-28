@@ -1,5 +1,6 @@
-// src/ai/flows/generate-saving-suggestions.ts
 'use server';
+
+console.log('GEMINI_API_KEY (server):', process.env.GEMINI_API_KEY ? 'definida' : 'NÃO DEFINIDA');
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
@@ -32,9 +33,6 @@ export type GenerateSavingSuggestionsOutput = z.infer<
   typeof GenerateSavingSuggestionsOutputSchema
 >;
 
-/**
- * Gera sugestões de economia personalizadas com base na situação financeira do usuário.
- */
 export async function generateSavingSuggestions(
   input: GenerateSavingSuggestionsInput
 ): Promise<GenerateSavingSuggestionsOutput> {
@@ -63,6 +61,5 @@ export async function generateSavingSuggestions(
     },
   });
 
-  // CORREÇÃO FINAL: O resultado agora é uma propriedade '.output', não um método.
   return llmResponse.output!;
 }
