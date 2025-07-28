@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///home/user/studio/src/app/exemplos/layout.tsx"],"sourcesContent":["\"use client\";\nimport { useAuth } from \"@/contexts/AuthContext\";\nimport { useRouter } from \"next/navigation\";\nimport { useEffect } from \"react\";\n\nexport default function ExemplosLayout({ children }: { children: React.ReactNode }) {\n  const { user, loading } = useAuth();\n  const router = useRouter();\n\n  useEffect(() => {\n    if (!loading && !user) {\n      router.push(\"/login\");\n    }\n  }, [user, loading, router]);\n\n  if (loading || !user) return <div>Carregando...</div>;\n\n  return <>{children}</>;\n}"],"names":[],"mappings":";;;;AACA;AACA;AACA;;;AAHA;;;;AAKe,SAAS,eAAe,EAAE,QAAQ,EAAiC;;IAChF,MAAM,EAAE,IAAI,EAAE,OAAO,EAAE,GAAG,CAAA,GAAA,kIAAA,CAAA,UAAO,AAAD;IAChC,MAAM,SAAS,CAAA,GAAA,qIAAA,CAAA,YAAS,AAAD;IAEvB,CAAA,GAAA,6JAAA,CAAA,YAAS,AAAD;oCAAE;YACR,IAAI,CAAC,WAAW,CAAC,MAAM;gBACrB,OAAO,IAAI,CAAC;YACd;QACF;mCAAG;QAAC;QAAM;QAAS;KAAO;IAE1B,IAAI,WAAW,CAAC,MAAM,qBAAO,6LAAC;kBAAI;;;;;;IAElC,qBAAO;kBAAG;;AACZ;GAbwB;;QACI,kIAAA,CAAA,UAAO;QAClB,qIAAA,CAAA,YAAS;;;KAFF","debugId":null}},
-    {"offset": {"line": 63, "column": 0}, "map": {"version":3,"sources":["file:///home/user/studio/node_modules/next/navigation.js"],"sourcesContent":["module.exports = require('./dist/client/components/navigation')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO","ignoreList":[0],"debugId":null}}]
-}

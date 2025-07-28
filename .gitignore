@@ -1,6 +1,9 @@
 # Dependências do Node.js (não enviar para o GitHub)
 node_modules/
 
+# Next.js build output (NUNCA versionar!)
+.next/
+
 # Firebase secrets - NÃO subir credenciais
 scripts/firebase-service-account.json
 
@@ -15,11 +18,3 @@ yarn-error.log*
 
 # VSCode
 .vscode/
-
-# Env files - variáveis de ambiente
-.env*
-.env
-
-# Outros arquivos temporários
-*.swp
-*.swo
