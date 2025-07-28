@@ -1,7 +1,3 @@
-'use server';
-
-console.log('GEMINI_API_KEY (server):', process.env.GEMINI_API_KEY ? 'definida' : 'NÃO DEFINIDA');
-
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { gemini15Flash } from '@genkit-ai/googleai';
@@ -54,7 +50,7 @@ export async function generateSavingSuggestions(
       Aqui estão algumas sugestões de economia para você:
     `,
     output: {
-        schema: GenerateSavingSuggestionsOutputSchema,
+      schema: GenerateSavingSuggestionsOutputSchema,
     },
     config: {
       temperature: 0.7,

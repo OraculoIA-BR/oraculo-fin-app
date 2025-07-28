@@ -1,8 +1,10 @@
 // src/app/signup/page.tsx
 "use client";
-import { useState } from "react";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Import the router
+import { createUserWithEmailAndPassword, GoogleAuthProvider, getAdditionalUserInfo, signInWithPopup } from "firebase/auth";
+import { auth, db } from "@/lib/firebase"; 
+import { doc, setDoc, serverTimestamp } from "firebase/firestore"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +22,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter(); // Initialize the router
 
-  // Mapeamento de erros do Firebase para mensagens amigáveis.
+  // --- FIX: Redirect user if already logged in ---
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
+  // ---------------------------------------------
+
   const getFriendlyErrorMessage = (errorCode: string): string => {
     switch (errorCode) {
       case "auth/email-already-in-use":
@@ -45,9 +55,19 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const newUser = userCredential.user;
+
+      await setDoc(doc(db, "users", newUser.uid), {
+        uid: newUser.uid,
+        email: newUser.email,
+        createdAt: serverTimestamp(),
+        displayName: newUser.displayName || null,
+        photoURL: newUser.photoURL || null,
+      });
+
       toast({ title: "Sucesso!", description: "Sua conta foi criada com sucesso." });
-      // O redirecionamento é tratado pelo AuthContext.
+      // The useEffect will handle the redirection
     } catch (error: any) {
       console.error("Erro no Cadastro com E-mail:", error.code, error.message);
       const message = getFriendlyErrorMessage(error.code);
@@ -60,10 +80,23 @@ export default function SignupPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast({ title: "Sucesso!", description: "Cadastro com Google realizado com sucesso." });
-      // O redirecionamento é tratado pelo AuthContext.
+      const provider = new new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const newUser = result.user;
+      
+      const additionalUserInfo = getAdditionalUserInfo(result);
+      if (additionalUserInfo?.isNewUser) {
+        await setDoc(doc(db, "users", newUser.uid), {
+          uid: newUser.uid,
+          email: newUser.email,
+          createdAt: serverTimestamp(),
+          displayName: newUser.displayName,
+          photoURL: newUser.photoURL,
+        });
+      }
+      
+      toast({ title: "Sucesso!", description: "Login com Google realizado com sucesso." });
+      // The useEffect will handle the redirection
     } catch (error: any) {
       console.error("Erro no Cadastro com Google:", error.code, error.message);
       const message = getFriendlyErrorMessage(error.code);
@@ -73,7 +106,7 @@ export default function SignupPage() {
     }
   };
 
-  // Exibe um loader enquanto a autenticação está sendo verificada ou se o usuário já está logado.
+  // This screen will now show a loader during the initial auth check OR during redirection
   if (authLoading || user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -96,42 +129,15 @@ export default function SignupPage() {
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              disabled={loading}
-              className="text-blue-900"
-            />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required disabled={loading} className="text-blue-900" />
           </div>
           <div>
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              required
-              disabled={loading}
-              className="text-blue-900"
-            />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required disabled={loading} className="text-blue-900" />
           </div>
           <div>
             <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repita a senha"
-              required
-              disabled={loading}
-              className="text-blue-900"
-            />
+            <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a senha" required disabled={loading} className="text-blue-900" />
           </div>
           <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-700" disabled={loading}>
              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando conta...</> : "Criar Conta"}
