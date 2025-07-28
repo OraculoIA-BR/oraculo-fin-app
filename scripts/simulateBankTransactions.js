@@ -9,7 +9,7 @@ const db = admin.firestore();
 
 const userTransactions = [
   {
-    userId: "Hka8H8sfnYY8zqwd2S1EdGn95j23",
+    userId: "zAg31eTuVhWaQ9pee1q7b27L4pX2",
     transactions: [
       { transactionId: "tx01", timestamp: "2025-07-01T08:10:00Z", amount: { amount: "-1400.00", currency: "BRL" }, category: "Moradia", description: "Aluguel Residencial" },
       { transactionId: "tx02", timestamp: "2025-07-02T12:15:00Z", amount: { amount: "-200.00", currency: "BRL" }, category: "Alimentação", description: "Supermercado" },

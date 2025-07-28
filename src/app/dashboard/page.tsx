@@ -1,43 +1,50 @@
 "use client";
-import React from "react";
-import { SavingSuggestions } from "@/components/dashboard/saving-suggestions";
-import { FinancialSearch } from "@/components/dashboard/financial-search";
-import { CategoryCharts } from "@/components/dashboard/category-charts";
+import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/layout";
 import { Loader2 } from "lucide-react";
-import { getSuggestionsAction } from "@/app/actions";
-import type { GenerateSavingSuggestionsOutput } from "@/ai/flows/generate-saving-suggestions";
+import { useAuth } from "@/contexts/AuthContext";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { CategoryCharts } from "@/components/dashboard/category-charts";
+import { FinancialSearch } from "@/components/dashboard/financial-search";
+// --- INÍCIO DA ADIÇÃO ---
+import { getTransactions, type Transaction } from "@/lib/firebase";
+// --- FIM DA ADIÇÃO ---
 
 export default function DashboardPage() {
-  const [suggestions, setSuggestions] = React.useState<
-    GenerateSavingSuggestionsOutput["suggestions"]
-  >([]);
-  const [dataLoading, setDataLoading] = React.useState(true);
+  const { user } = useAuth();
+  // --- INÍCIO DA ADIÇÃO ---
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  // --- FIM DA ADIÇÃO ---
 
-  React.useEffect(() => {
-    // Chama a Server Action, que é segura para ser usada em componentes de cliente.
-    getSuggestionsAction({
-      financialSituation:
-        "Renda mensal de R$5000, despesas fixas de R$2500, despesas variáveis de R$1500.",
-      savingGoals:
-        "Comprar um carro novo em 2 anos e fazer uma viagem internacional.",
-    })
-      .then((output) => {
-        if (output && output.suggestions) {
-          setSuggestions(output.suggestions);
-        } else {
-          setSuggestions([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch saving suggestions via action:", error);
-        setSuggestions([]);
-      })
-      .finally(() => setDataLoading(false));
-  }, []);
+  useEffect(() => {
+    // Busca os dados apenas se o usuário estiver autenticado.
+    if (user) {
+      getTransactions(user.uid)
+        .then(data => {
+          setTransactions(data);
+        })
+        .catch(error => {
+          console.error("Falha ao carregar dados do dashboard:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      // Se não houver usuário, para de carregar.
+      setLoading(false);
+    }
+  }, [user]); // Roda o efeito sempre que o objeto 'user' mudar.
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -52,17 +59,10 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
-        <RecentTransactions />
-        {dataLoading ? (
-          <div className="flex items-center justify-center p-6">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">
-              Carregando sugestões de economia...
-            </span>
-          </div>
-        ) : (
-          <SavingSuggestions suggestions={suggestions} />
-        )}
+        {/* Passa as transações reais para o componente */}
+        <RecentTransactions transactions={transactions} />
+        {/* O componente de sugestões será implementado futuramente */}
+        <div /> 
       </div>
     </DashboardLayout>
   );

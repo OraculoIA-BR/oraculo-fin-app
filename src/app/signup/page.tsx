@@ -1,10 +1,11 @@
 // src/app/signup/page.tsx
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Import the router
+import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, GoogleAuthProvider, getAdditionalUserInfo, signInWithPopup } from "firebase/auth";
-import { auth, db } from "@/lib/firebase"; 
-import { doc, setDoc, serverTimestamp } from "firebase/firestore"; 
+// --- INÍCIO DA ADIÇÃO ---
+import { auth, setupNewUser } from "@/lib/firebase"; // Importa a nova função
+// --- FIM DA ADIÇÃO ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,29 +23,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
-  // --- FIX: Redirect user if already logged in ---
   useEffect(() => {
     if (user) {
       router.push("/dashboard");
     }
   }, [user, router]);
-  // ---------------------------------------------
 
   const getFriendlyErrorMessage = (errorCode: string): string => {
-    switch (errorCode) {
-      case "auth/email-already-in-use":
-        return "Este e-mail já está cadastrado. Tente fazer login.";
-      case "auth/invalid-email":
-        return "O formato do e-mail é inválido.";
-      case "auth/weak-password":
-        return "A senha é muito fraca. Use pelo menos 6 caracteres.";
-      case "auth/network-request-failed":
-        return "Falha de conexão. Verifique sua internet e tente novamente.";
-      default:
-        return "Ocorreu um erro inesperado durante o cadastro. Tente novamente.";
-    }
+    // ... (código existente)
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -57,17 +45,13 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
+      
+      // --- INÍCIO DA ADIÇÃO ---
+      // Chama a função para configurar o banco de dados do novo usuário
+      await setupNewUser(newUser);
+      // --- FIM DA ADIÇÃO ---
 
-      await setDoc(doc(db, "users", newUser.uid), {
-        uid: newUser.uid,
-        email: newUser.email,
-        createdAt: serverTimestamp(),
-        displayName: newUser.displayName || null,
-        photoURL: newUser.photoURL || null,
-      });
-
-      toast({ title: "Sucesso!", description: "Sua conta foi criada com sucesso." });
-      // The useEffect will handle the redirection
+      toast({ title: "Sucesso!", description: "Sua conta foi criada e populada com dados de exemplo." });
     } catch (error: any) {
       console.error("Erro no Cadastro com E-mail:", error.code, error.message);
       const message = getFriendlyErrorMessage(error.code);
@@ -80,33 +64,26 @@ export default function SignupPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const provider = new new GoogleAuthProvider();
+      const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const newUser = result.user;
       
       const additionalUserInfo = getAdditionalUserInfo(result);
       if (additionalUserInfo?.isNewUser) {
-        await setDoc(doc(db, "users", newUser.uid), {
-          uid: newUser.uid,
-          email: newUser.email,
-          createdAt: serverTimestamp(),
-          displayName: newUser.displayName,
-          photoURL: newUser.photoURL,
-        });
+        // --- INÍCIO DA ADIÇÃO ---
+        // Chama a função para configurar o banco de dados apenas para novos usuários do Google
+        await setupNewUser(newUser);
+        // --- FIM DA ADIÇÃO ---
       }
       
       toast({ title: "Sucesso!", description: "Login com Google realizado com sucesso." });
-      // The useEffect will handle the redirection
     } catch (error: any) {
-      console.error("Erro no Cadastro com Google:", error.code, error.message);
-      const message = getFriendlyErrorMessage(error.code);
-      toast({ title: "Erro de Cadastro", description: message, variant: "destructive" });
+      // ... (código existente)
     } finally {
       setLoading(false);
     }
   };
 
-  // This screen will now show a loader during the initial auth check OR during redirection
   if (authLoading || user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -116,6 +93,7 @@ export default function SignupPage() {
   }
 
   return (
+    // --- O RESTANTE DO SEU CÓDIGO JSX PERMANECE O MESMO ---
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <div className="text-center">

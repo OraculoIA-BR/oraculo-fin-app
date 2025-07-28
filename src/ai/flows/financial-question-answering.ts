@@ -32,21 +32,33 @@ export async function answerFinancialQuestion(
       history: genkitHistory,
       prompt: `
         Você é Oráculo, um especialista em finanças pessoais.
+        Sua tarefa é responder a perguntas sobre as finanças do usuário.
         O usuário está logado com o e-mail: ${input.userEmail}.
-        Responda sempre em Português do Brasil.
-        Pergunta: ${input.question}
+
+        **REGRAS:**
+        1.  Responda sempre em Português do Brasil.
+        2.  Seja claro e objetivo.
+        3.  Se a pergunta não for sobre finanças, recuse educadamente.
+
+        **Pergunta do Usuário:**
+        ${input.question}
       `,
       config: {
         temperature: 0.5,
       },
     });
 
-    const answer = llmResponse.text();
+    // --- INÍCIO DA CORREÇÃO FINAL ---
+    // Ajusta o caminho para corresponder à estrutura de resposta real do log.
+    const answer = llmResponse?.custom?.candidates?.[0]?.content?.parts?.[0]?.text;
+    // --- FIM DA CORREÇÃO FINAL ---
 
     if (!answer) {
-      return { answer: "[⚠️ A IA não forneceu uma resposta. Tente reformular a pergunta.]" };
+      console.warn("Não foi possível extrair o texto da resposta da IA. Resposta completa:", JSON.stringify(llmResponse, null, 2));
+      return { answer: "[⚠️ A IA não forneceu uma resposta em um formato esperado.]" };
     }
 
+    console.log('DEBUG - Resposta entregue ao frontend:', answer);
     return { answer };
 
   } catch (error) {
