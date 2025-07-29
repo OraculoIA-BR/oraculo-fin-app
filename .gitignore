@@ -1,20 +1,66 @@
-# Dependências do Node.js (não enviar para o GitHub)
+# Node modules
 node_modules/
 
-# Next.js build output (NUNCA versionar!)
+# Next.js build output
 .next/
+out/
 
-# Firebase secrets - NÃO subir credenciais
-scripts/firebase-service-account.json
-
-# Mac OS (caso use Mac)
-.DS_Store
-
-# Log files
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
 
-# VSCode
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Env files (NUNCA suba credenciais para o GitHub!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase secrets
+serviceAccountKey.json
+firebase-debug.log
+firebase-error.log
+
+# Coverage reports
+coverage/
+
+# Misc
+dist/
+build/
+.cache/
+tmp/
 .vscode/
+.idea/
+
+# Test output
+jest-test-results.json
+
+# Ignore sample data (se necessário)
+sample-data.ts
+
+# SASS cache
+.sass-cache/
+
+# Windows
+*.swp
+
+# Typescript cache
+*.tsbuildinfo
+
+# Ignore generated files from scripts
+scripts/*.js
+scripts/*.d.ts
+scripts/*.map
+
+# Ignore backups
+*.bak
+
+# Ignore lockfiles if not used
+# yarn.lock
+# package-lock.json
