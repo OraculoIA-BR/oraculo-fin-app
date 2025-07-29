@@ -6,13 +6,11 @@ import {
   orderBy, 
   limit, 
   getDocs,
-  writeBatch, // Importa o writeBatch para operações em lote
-  doc // Importa a função doc
+  writeBatch,
+  doc
 } from "firebase/firestore";
 import { getAuth, type User } from "firebase/auth";
-// --- INÍCIO DA ADIÇÃO ---
-import { sampleTransactions } from "./sample-data"; // Importa os dados de exemplo
-// --- FIM DA ADIÇÃO ---
+import { sampleTransactions } from "./sample-data"; // Ajuste o caminho conforme o local correto
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -38,48 +36,38 @@ export interface Transaction {
 }
 
 export async function getTransactions(userId: string): Promise<Transaction[]> {
-  // ... (código existente)
+  // ... (código existente da função, se houver)
 }
 
-// --- INÍCIO DA ADIÇÃO ---
 /**
  * Cria o documento do usuário e popula com as transações de exemplo.
  * @param user O objeto do usuário recém-criado do Firebase Auth.
  */
 export async function setupNewUser(user: User) {
   if (!user) return;
-
   try {
     const userDocRef = doc(db, 'users', user.uid);
     const transactionsColRef = collection(userDocRef, 'transactions');
-    
     const batch = writeBatch(db);
 
-    // 1. Adiciona as 50 transações de exemplo
     sampleTransactions.forEach((tx) => {
       const txDocRef = doc(transactionsColRef, tx.transactionId);
       batch.set(txDocRef, tx);
     });
 
-    // 2. Cria o documento principal do usuário (pode ser expandido no futuro)
     batch.set(userDocRef, {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
       photoURL: user.photoURL,
-      createdAt: new Date().toISOString(), // Usa a data atual
+      createdAt: new Date().toISOString(),
     });
 
-    // 3. Executa todas as operações de escrita de uma vez
     await batch.commit();
-    console.log(`Novo usuário ${user.uid} configurado com sucesso com 50 transações.`);
-
+    console.log(`Novo usuário ${user.uid} configurado com sucesso com transações de exemplo.`);
   } catch (error) {
     console.error("Erro ao configurar novo usuário:", error);
-    // Opcional: Adicionar lógica para lidar com o erro, como deletar o usuário criado.
   }
 }
-// --- FIM DA ADIÇÃO ---
-
 
 export { db, auth };

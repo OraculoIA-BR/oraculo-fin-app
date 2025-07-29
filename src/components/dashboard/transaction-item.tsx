@@ -1,55 +1,50 @@
-// src/components/dashboard/transaction-item.tsx
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { type Transaction } from "@/lib/firebase"; // Importa a interface
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { TrendingUp, TrendingDown, Home, ShoppingCart, Utensils, Car, GraduationCap, HandCoins, PiggyBank } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { type Transaction } from '@/services/transactionService';
 
-// Mapeamento de categorias para ícones
-const categoryIcons: { [key: string]: React.ReactNode } = {
-  "Moradia": <Home className="h-5 w-5" />,
-  "Supermercado": <ShoppingCart className="h-5 w-5" />,
-  "Alimentação": <Utensils className="h-5 w-5" />,
-  "Transporte": <Car className="h-5 w-5" />,
-  "Educação": <GraduationCap className="h-5 w-5" />,
-  "Salário": <HandCoins className="h-5 w-5" />,
-  "Investimentos": <PiggyBank className="h-5 w-5" />,
-  "Outros": <TrendingDown className="h-5 w-5" />,
-};
-
-// Define as props que o componente espera.
 interface TransactionItemProps {
   transaction: Transaction;
 }
 
 /**
- * Exibe um único item de transação.
+ * Exibe um único item de transação, agora mais robusto a dados incompletos.
  */
 export function TransactionItem({ transaction }: TransactionItemProps) {
-  const isIncome = transaction.type === 'income';
-
-  // Formata o valor monetário para o padrão brasileiro (BRL).
+  // Converte o valor para número. Se falhar, usa 0.
+  const amount = parseFloat(transaction.amount) || 0;
+  const isIncome = amount > 0;
+  // Define 'BRL' como fallback caso a moeda não seja fornecida.
+  const currencyCode = transaction.currency || 'BRL';
+  // Formata o valor monetário para o padrão brasileiro.
   const formattedAmount = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: transaction.currency,
-  }).format(transaction.amount);
-
+    currency: currencyCode,
+  }).format(amount);
   // Formata a data para um formato mais legível.
-  const formattedDate = format(transaction.date, "dd 'de' MMM", { locale: ptBR });
+  const formattedDate = new Date(transaction.timestamp).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+  });
 
   return (
-    <div className="flex items-center gap-4">
-      <Avatar className="hidden h-9 w-9 sm:flex bg-gray-100 text-gray-600">
-        <AvatarFallback>
-          {categoryIcons[transaction.category] || <TrendingDown className="h-5 w-5" />}
-        </AvatarFallback>
-      </Avatar>
-      <div className="grid gap-1 flex-1">
-        <p className="text-sm font-medium leading-none">{transaction.description}</p>
-        <p className="text-sm text-muted-foreground">{transaction.category} - {formattedDate}</p>
+    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+      <div className="flex items-center gap-4">
+        <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100' : 'bg-red-100'}`}>
+          {isIncome ? (
+            <ArrowUpRight className="h-5 w-5 text-green-600" />
+          ) : (
+            <ArrowDownLeft className="h-5 w-5 text-red-600" />
+          )}
+        </div>
+        <div>
+          <p className="font-semibold text-gray-800">{transaction.description}</p>
+          <p className="text-sm text-gray-500">{transaction.category}</p>
+        </div>
       </div>
-      <div className={`font-medium text-sm ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
-        {isIncome ? `+${formattedAmount}` : formattedAmount}
+      <div className="text-right">
+        <p className={`font-bold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+          {formattedAmount}
+        </p>
+        <p className="text-sm text-gray-500">{formattedDate}</p>
       </div>
     </div>
   );

@@ -1,366 +1,703 @@
-import { db } from '../src/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-
-// 50 transações exemplo
-const transactions = [
+export const transactions = [
   {
-    transactionId: "tx01",
-    timestamp: "2025-07-01T08:10:00Z",
-    amount: { amount: "125.50", currency: "BRL" },
+    transactionId: "1",
+    description: "Supermercado",
+    amount: { amount: "250.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Café da manhã na padaria"
+    timestamp: "2025-07-01T08:10:00Z"
   },
   {
-    transactionId: "tx02",
-    timestamp: "2025-07-01T12:45:00Z",
-    amount: { amount: "35.90", currency: "BRL" },
+    transactionId: "2",
+    description: "Restaurante",
+    amount: { amount: "80.50", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-02T12:30:00Z"
+  },
+  {
+    transactionId: "3",
+    description: "Uber",
+    amount: { amount: "34.90", currency: "BRL" },
     category: "Transporte",
-    description: "Corrida Uber ao trabalho"
+    timestamp: "2025-07-03T09:45:00Z"
   },
   {
-    transactionId: "tx03",
-    timestamp: "2025-07-01T18:30:00Z",
-    amount: { amount: "56.00", currency: "BRL" },
-    category: "Alimentação",
-    description: "Jantar no restaurante"
-  },
-  {
-    transactionId: "tx04",
-    timestamp: "2025-07-02T09:15:00Z",
-    amount: { amount: "27.80", currency: "BRL" },
-    category: "Mercado",
-    description: "Compra de pães e leite"
-  },
-  {
-    transactionId: "tx05",
-    timestamp: "2025-07-02T14:00:00Z",
-    amount: { amount: "210.00", currency: "BRL" },
-    category: "Educação",
-    description: "Curso online"
-  },
-  {
-    transactionId: "tx06",
-    timestamp: "2025-07-02T20:40:00Z",
-    amount: { amount: "120.00", currency: "BRL" },
+    transactionId: "4",
+    description: "Cinema",
+    amount: { amount: "40.00", currency: "BRL" },
     category: "Lazer",
-    description: "Cinema com amigos"
+    timestamp: "2025-07-04T20:00:00Z"
   },
   {
-    transactionId: "tx07",
-    timestamp: "2025-07-03T07:30:00Z",
+    transactionId: "5",
+    description: "Padaria",
+    amount: { amount: "15.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-05T07:30:00Z"
+  },
+  {
+    transactionId: "6",
+    description: "Farmácia",
+    amount: { amount: "65.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-07-06T10:10:00Z"
+  },
+  {
+    transactionId: "7",
+    description: "Internet",
+    amount: { amount: "120.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-07-07T18:00:00Z"
+  },
+  {
+    transactionId: "8",
+    description: "Gasolina",
+    amount: { amount: "150.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-07-08T08:00:00Z"
+  },
+  {
+    transactionId: "9",
+    description: "Academia",
     amount: { amount: "90.00", currency: "BRL" },
     category: "Saúde",
-    description: "Consulta médica"
+    timestamp: "2025-07-09T19:00:00Z"
   },
   {
-    transactionId: "tx08",
-    timestamp: "2025-07-03T11:00:00Z",
-    amount: { amount: "58.20", currency: "BRL" },
+    transactionId: "10",
+    description: "Café",
+    amount: { amount: "12.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Almoço no self-service"
+    timestamp: "2025-07-10T08:30:00Z"
   },
   {
-    transactionId: "tx09",
-    timestamp: "2025-07-03T17:00:00Z",
-    amount: { amount: "18.50", currency: "BRL" },
-    category: "Transporte",
-    description: "Ônibus"
-  },
-  {
-    transactionId: "tx10",
-    timestamp: "2025-07-04T10:15:00Z",
-    amount: { amount: "33.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Feira de frutas"
-  },
-  {
-    transactionId: "tx11",
-    timestamp: "2025-07-04T15:30:00Z",
-    amount: { amount: "75.00", currency: "BRL" },
-    category: "Vestuário",
-    description: "Camiseta nova"
-  },
-  {
-    transactionId: "tx12",
-    timestamp: "2025-07-04T21:00:00Z",
-    amount: { amount: "55.90", currency: "BRL" },
+    transactionId: "11",
+    description: "Bar",
+    amount: { amount: "70.00", currency: "BRL" },
     category: "Lazer",
-    description: "Bar com amigos"
+    timestamp: "2025-07-11T22:00:00Z"
   },
   {
-    transactionId: "tx13",
-    timestamp: "2025-07-05T09:10:00Z",
+    transactionId: "12",
+    description: "Telefone",
+    amount: { amount: "60.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-07-12T17:00:00Z"
+  },
+  {
+    transactionId: "13",
+    description: "Mercado",
+    amount: { amount: "200.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-13T09:00:00Z"
+  },
+  {
+    transactionId: "14",
+    description: "Pet Shop",
+    amount: { amount: "80.00", currency: "BRL" },
+    category: "Pets",
+    timestamp: "2025-07-14T14:00:00Z"
+  },
+  {
+    transactionId: "15",
+    description: "Gás",
+    amount: { amount: "55.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-07-15T16:00:00Z"
+  },
+  {
+    transactionId: "16",
+    description: "Sorvete",
+    amount: { amount: "18.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-07-16T15:00:00Z"
+  },
+  {
+    transactionId: "17",
+    description: "Uber",
+    amount: { amount: "22.50", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-07-17T11:00:00Z"
+  },
+  {
+    transactionId: "18",
+    description: "Pizzaria",
+    amount: { amount: "65.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-18T20:30:00Z"
+  },
+  {
+    transactionId: "19",
+    description: "Streaming",
+    amount: { amount: "39.90", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-07-19T21:00:00Z"
+  },
+  {
+    transactionId: "20",
+    description: "Taxi",
+    amount: { amount: "50.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-07-20T08:10:00Z"
+  },
+  {
+    transactionId: "21",
+    description: "Supermercado",
+    amount: { amount: "230.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-21T10:00:00Z"
+  },
+  {
+    transactionId: "22",
+    description: "Restaurante",
+    amount: { amount: "90.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-22T13:00:00Z"
+  },
+  {
+    transactionId: "23",
+    description: "Ônibus",
+    amount: { amount: "4.50", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-07-23T08:00:00Z"
+  },
+  {
+    transactionId: "24",
+    description: "Médico",
+    amount: { amount: "150.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-07-24T10:00:00Z"
+  },
+  {
+    transactionId: "25",
+    description: "Padaria",
+    amount: { amount: "18.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-25T07:30:00Z"
+  },
+  {
+    transactionId: "26",
+    description: "Farmácia",
+    amount: { amount: "85.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-07-26T12:00:00Z"
+  },
+  {
+    transactionId: "27",
+    description: "Internet",
+    amount: { amount: "120.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-07-27T18:00:00Z"
+  },
+  {
+    transactionId: "28",
+    description: "Gasolina",
+    amount: { amount: "160.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-07-28T08:00:00Z"
+  },
+  {
+    transactionId: "29",
+    description: "Academia",
+    amount: { amount: "95.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-07-29T19:00:00Z"
+  },
+  {
+    transactionId: "30",
+    description: "Café",
+    amount: { amount: "13.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-07-30T08:30:00Z"
+  },
+  {
+    transactionId: "31",
+    description: "Bar",
+    amount: { amount: "75.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-07-31T22:00:00Z"
+  },
+  {
+    transactionId: "32",
+    description: "Telefone",
+    amount: { amount: "65.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-08-01T17:00:00Z"
+  },
+  {
+    transactionId: "33",
+    description: "Feira",
+    amount: { amount: "35.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-02T08:00:00Z"
+  },
+  {
+    transactionId: "34",
+    description: "Pet Shop",
+    amount: { amount: "82.00", currency: "BRL" },
+    category: "Pets",
+    timestamp: "2025-08-03T14:00:00Z"
+  },
+  {
+    transactionId: "35",
+    description: "Gás",
+    amount: { amount: "57.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-08-04T16:00:00Z"
+  },
+  {
+    transactionId: "36",
+    description: "Sorvete",
+    amount: { amount: "19.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-08-05T15:00:00Z"
+  },
+  {
+    transactionId: "37",
+    description: "Uber",
+    amount: { amount: "23.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-08-06T11:00:00Z"
+  },
+  {
+    transactionId: "38",
+    description: "Pizzaria",
+    amount: { amount: "66.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-07T20:30:00Z"
+  },
+  {
+    transactionId: "39",
+    description: "Streaming",
+    amount: { amount: "39.90", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-08-08T21:00:00Z"
+  },
+  {
+    transactionId: "40",
+    description: "Taxi",
+    amount: { amount: "52.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-08-09T08:10:00Z"
+  },
+  {
+    transactionId: "41",
+    description: "Shopping",
+    amount: { amount: "200.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-08-10T16:00:00Z"
+  },
+  {
+    transactionId: "42",
+    description: "Almoço",
+    amount: { amount: "40.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-11T12:00:00Z"
+  },
+  {
+    transactionId: "43",
+    description: "Ônibus",
+    amount: { amount: "4.80", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-08-12T08:00:00Z"
+  },
+  {
+    transactionId: "44",
+    description: "Remédio",
+    amount: { amount: "60.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-08-13T09:00:00Z"
+  },
+  {
+    transactionId: "45",
+    description: "Padaria",
+    amount: { amount: "20.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-14T07:30:00Z"
+  },
+  {
+    transactionId: "46",
+    description: "Farmácia",
+    amount: { amount: "95.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-08-15T12:00:00Z"
+  },
+  {
+    transactionId: "47",
+    description: "Internet",
+    amount: { amount: "130.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-08-16T18:00:00Z"
+  },
+  {
+    transactionId: "48",
+    description: "Gasolina",
+    amount: { amount: "170.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-08-17T08:00:00Z"
+  },
+  {
+    transactionId: "49",
+    description: "Academia",
+    amount: { amount: "100.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-08-18T19:00:00Z"
+  },
+  {
+    transactionId: "50",
+    description: "Livros",
+    amount: { amount: "75.00", currency: "BRL" },
+    category: "Educação",
+    timestamp: "2025-08-19T15:00:00Z"
+  },
+  // Exemplos 51 a 100
+  {
+    transactionId: "51",
+    description: "Curso online",
+    amount: { amount: "250.00", currency: "BRL" },
+    category: "Educação",
+    timestamp: "2025-08-20T09:00:00Z"
+  },
+  {
+    transactionId: "52",
+    description: "Material escolar",
+    amount: { amount: "40.00", currency: "BRL" },
+    category: "Educação",
+    timestamp: "2025-08-21T10:00:00Z"
+  },
+  {
+    transactionId: "53",
+    description: "Papelaria",
+    amount: { amount: "25.00", currency: "BRL" },
+    category: "Educação",
+    timestamp: "2025-08-22T11:00:00Z"
+  },
+  {
+    transactionId: "54",
+    description: "Faculdade",
+    amount: { amount: "800.00", currency: "BRL" },
+    category: "Educação",
+    timestamp: "2025-08-23T12:00:00Z"
+  },
+  {
+    transactionId: "55",
+    description: "Cinema",
+    amount: { amount: "40.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-08-24T20:00:00Z"
+  },
+  {
+    transactionId: "56",
+    description: "Supermercado",
+    amount: { amount: "210.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-25T08:10:00Z"
+  },
+  {
+    transactionId: "57",
+    description: "Restaurante",
+    amount: { amount: "90.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-26T13:00:00Z"
+  },
+  {
+    transactionId: "58",
+    description: "Ônibus",
+    amount: { amount: "4.20", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-08-27T08:00:00Z"
+  },
+  {
+    transactionId: "59",
+    description: "Médico",
+    amount: { amount: "180.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-08-28T10:00:00Z"
+  },
+  {
+    transactionId: "60",
+    description: "Padaria",
+    amount: { amount: "21.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-08-29T07:30:00Z"
+  },
+  {
+    transactionId: "61",
+    description: "Farmácia",
     amount: { amount: "70.00", currency: "BRL" },
     category: "Saúde",
-    description: "Farmácia"
+    timestamp: "2025-08-30T12:00:00Z"
   },
   {
-    transactionId: "tx14",
-    timestamp: "2025-07-05T13:20:00Z",
-    amount: { amount: "48.75", currency: "BRL" },
-    category: "Alimentação",
-    description: "Almoço delivery"
+    transactionId: "62",
+    description: "Internet",
+    amount: { amount: "125.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-08-31T18:00:00Z"
   },
   {
-    transactionId: "tx15",
-    timestamp: "2025-07-05T18:50:00Z",
-    amount: { amount: "120.00", currency: "BRL" },
-    category: "Educação",
-    description: "Compra de livros"
-  },
-  {
-    transactionId: "tx16",
-    timestamp: "2025-07-06T08:00:00Z",
-    amount: { amount: "25.00", currency: "BRL" },
+    transactionId: "63",
+    description: "Gasolina",
+    amount: { amount: "155.00", currency: "BRL" },
     category: "Transporte",
-    description: "Táxi"
+    timestamp: "2025-09-01T08:00:00Z"
   },
   {
-    transactionId: "tx17",
-    timestamp: "2025-07-06T12:30:00Z",
-    amount: { amount: "95.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Supermercado"
+    transactionId: "64",
+    description: "Academia",
+    amount: { amount: "92.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-09-02T19:00:00Z"
   },
   {
-    transactionId: "tx18",
-    timestamp: "2025-07-06T20:10:00Z",
-    amount: { amount: "180.00", currency: "BRL" },
+    transactionId: "65",
+    description: "Café",
+    amount: { amount: "14.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-03T08:30:00Z"
+  },
+  {
+    transactionId: "66",
+    description: "Bar",
+    amount: { amount: "72.00", currency: "BRL" },
     category: "Lazer",
-    description: "Show musical"
+    timestamp: "2025-09-04T22:00:00Z"
   },
   {
-    transactionId: "tx19",
-    timestamp: "2025-07-07T07:20:00Z",
+    transactionId: "67",
+    description: "Telefone",
+    amount: { amount: "68.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-09-05T17:00:00Z"
+  },
+  {
+    transactionId: "68",
+    description: "Feira",
+    amount: { amount: "37.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-06T08:00:00Z"
+  },
+  {
+    transactionId: "69",
+    description: "Pet Shop",
+    amount: { amount: "85.00", currency: "BRL" },
+    category: "Pets",
+    timestamp: "2025-09-07T14:00:00Z"
+  },
+  {
+    transactionId: "70",
+    description: "Gás",
+    amount: { amount: "59.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-09-08T16:00:00Z"
+  },
+  {
+    transactionId: "71",
+    description: "Sorvete",
+    amount: { amount: "20.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-09-09T15:00:00Z"
+  },
+  {
+    transactionId: "72",
+    description: "Uber",
+    amount: { amount: "24.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-09-10T11:00:00Z"
+  },
+  {
+    transactionId: "73",
+    description: "Pizzaria",
+    amount: { amount: "68.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-11T20:30:00Z"
+  },
+  {
+    transactionId: "74",
+    description: "Streaming",
+    amount: { amount: "39.90", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-09-12T21:00:00Z"
+  },
+  {
+    transactionId: "75",
+    description: "Taxi",
+    amount: { amount: "53.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-09-13T08:10:00Z"
+  },
+  {
+    transactionId: "76",
+    description: "Shopping",
+    amount: { amount: "210.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-09-14T16:00:00Z"
+  },
+  {
+    transactionId: "77",
+    description: "Almoço",
+    amount: { amount: "41.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-15T12:00:00Z"
+  },
+  {
+    transactionId: "78",
+    description: "Ônibus",
+    amount: { amount: "4.90", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-09-16T08:00:00Z"
+  },
+  {
+    transactionId: "79",
+    description: "Remédio",
+    amount: { amount: "62.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-09-17T09:00:00Z"
+  },
+  {
+    transactionId: "80",
+    description: "Padaria",
+    amount: { amount: "22.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-18T07:30:00Z"
+  },
+  {
+    transactionId: "81",
+    description: "Farmácia",
+    amount: { amount: "99.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-09-19T12:00:00Z"
+  },
+  {
+    transactionId: "82",
+    description: "Internet",
+    amount: { amount: "135.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-09-20T18:00:00Z"
+  },
+  {
+    transactionId: "83",
+    description: "Gasolina",
+    amount: { amount: "175.00", currency: "BRL" },
+    category: "Transporte",
+    timestamp: "2025-09-21T08:00:00Z"
+  },
+  {
+    transactionId: "84",
+    description: "Academia",
+    amount: { amount: "105.00", currency: "BRL" },
+    category: "Saúde",
+    timestamp: "2025-09-22T19:00:00Z"
+  },
+  {
+    transactionId: "85",
+    description: "Café",
+    amount: { amount: "15.00", currency: "BRL" },
+    category: "Alimentação",
+    timestamp: "2025-09-23T08:30:00Z"
+  },
+  {
+    transactionId: "86",
+    description: "Bar",
+    amount: { amount: "80.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-09-24T22:00:00Z"
+  },
+  {
+    transactionId: "87",
+    description: "Telefone",
+    amount: { amount: "70.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-09-25T17:00:00Z"
+  },
+  {
+    transactionId: "88",
+    description: "Feira",
     amount: { amount: "38.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Café especial"
+    timestamp: "2025-09-26T08:00:00Z"
   },
   {
-    transactionId: "tx20",
-    timestamp: "2025-07-07T14:40:00Z",
-    amount: { amount: "60.00", currency: "BRL" },
+    transactionId: "89",
+    description: "Pet Shop",
+    amount: { amount: "88.00", currency: "BRL" },
+    category: "Pets",
+    timestamp: "2025-09-27T14:00:00Z"
+  },
+  {
+    transactionId: "90",
+    description: "Gás",
+    amount: { amount: "61.00", currency: "BRL" },
+    category: "Moradia",
+    timestamp: "2025-09-28T16:00:00Z"
+  },
+  {
+    transactionId: "91",
+    description: "Sorvete",
+    amount: { amount: "21.00", currency: "BRL" },
+    category: "Lazer",
+    timestamp: "2025-09-29T15:00:00Z"
+  },
+  {
+    transactionId: "92",
+    description: "Uber",
+    amount: { amount: "25.00", currency: "BRL" },
     category: "Transporte",
-    description: "Combustível"
+    timestamp: "2025-09-30T11:00:00Z"
   },
   {
-    transactionId: "tx21",
-    timestamp: "2025-07-07T19:30:00Z",
-    amount: { amount: "45.20", currency: "BRL" },
+    transactionId: "93",
+    description: "Pizzaria",
+    amount: { amount: "70.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Jantar japonês"
+    timestamp: "2025-10-01T20:30:00Z"
   },
   {
-    transactionId: "tx22",
-    timestamp: "2025-07-08T09:00:00Z",
-    amount: { amount: "32.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Padaria"
-  },
-  {
-    transactionId: "tx23",
-    timestamp: "2025-07-08T13:50:00Z",
-    amount: { amount: "145.00", currency: "BRL" },
-    category: "Educação",
-    description: "Mensalidade curso"
-  },
-  {
-    transactionId: "tx24",
-    timestamp: "2025-07-08T18:10:00Z",
-    amount: { amount: "77.00", currency: "BRL" },
-    category: "Lazer",
-    description: "Restaurante mexicano"
-  },
-  {
-    transactionId: "tx25",
-    timestamp: "2025-07-09T08:30:00Z",
-    amount: { amount: "28.00", currency: "BRL" },
-    category: "Saúde",
-    description: "Exames laboratoriais"
-  },
-  {
-    transactionId: "tx26",
-    timestamp: "2025-07-09T11:45:00Z",
+    transactionId: "94",
+    description: "Streaming",
     amount: { amount: "39.90", currency: "BRL" },
-    category: "Alimentação",
-    description: "Almoço rápido"
-  },
-  {
-    transactionId: "tx27",
-    timestamp: "2025-07-09T17:20:00Z",
-    amount: { amount: "230.00", currency: "BRL" },
-    category: "Vestuário",
-    description: "Calça jeans"
-  },
-  {
-    transactionId: "tx28",
-    timestamp: "2025-07-10T10:30:00Z",
-    amount: { amount: "140.00", currency: "BRL" },
     category: "Lazer",
-    description: "Ingressos parque"
+    timestamp: "2025-10-02T21:00:00Z"
   },
   {
-    transactionId: "tx29",
-    timestamp: "2025-07-10T16:15:00Z",
+    transactionId: "95",
+    description: "Taxi",
     amount: { amount: "55.00", currency: "BRL" },
     category: "Transporte",
-    description: "Uber para casa"
+    timestamp: "2025-10-03T08:10:00Z"
   },
   {
-    transactionId: "tx30",
-    timestamp: "2025-07-10T20:10:00Z",
-    amount: { amount: "78.80", currency: "BRL" },
-    category: "Alimentação",
-    description: "Pizza"
-  },
-  {
-    transactionId: "tx31",
-    timestamp: "2025-07-11T08:50:00Z",
-    amount: { amount: "44.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Açougue"
-  },
-  {
-    transactionId: "tx32",
-    timestamp: "2025-07-11T12:20:00Z",
-    amount: { amount: "69.90", currency: "BRL" },
-    category: "Educação",
-    description: "Curso de idiomas"
-  },
-  {
-    transactionId: "tx33",
-    timestamp: "2025-07-11T19:00:00Z",
-    amount: { amount: "102.00", currency: "BRL" },
+    transactionId: "96",
+    description: "Shopping",
+    amount: { amount: "220.00", currency: "BRL" },
     category: "Lazer",
-    description: "Teatro"
+    timestamp: "2025-10-04T16:00:00Z"
   },
   {
-    transactionId: "tx34",
-    timestamp: "2025-07-12T09:40:00Z",
-    amount: { amount: "37.00", currency: "BRL" },
-    category: "Saúde",
-    description: "Farmácia"
-  },
-  {
-    transactionId: "tx35",
-    timestamp: "2025-07-12T13:10:00Z",
-    amount: { amount: "110.00", currency: "BRL" },
-    category: "Vestuário",
-    description: "Tênis esportivo"
-  },
-  {
-    transactionId: "tx36",
-    timestamp: "2025-07-12T17:30:00Z",
-    amount: { amount: "85.00", currency: "BRL" },
-    category: "Lazer",
-    description: "Jogo de futebol"
-  },
-  {
-    transactionId: "tx37",
-    timestamp: "2025-07-13T10:00:00Z",
-    amount: { amount: "60.00", currency: "BRL" },
+    transactionId: "97",
+    description: "Almoço",
+    amount: { amount: "42.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Café da manhã especial"
+    timestamp: "2025-10-05T12:00:00Z"
   },
   {
-    transactionId: "tx38",
-    timestamp: "2025-07-13T15:30:00Z",
-    amount: { amount: "49.00", currency: "BRL" },
+    transactionId: "98",
+    description: "Ônibus",
+    amount: { amount: "5.00", currency: "BRL" },
     category: "Transporte",
-    description: "Combustível"
+    timestamp: "2025-10-06T08:00:00Z"
   },
   {
-    transactionId: "tx39",
-    timestamp: "2025-07-13T21:20:00Z",
-    amount: { amount: "88.00", currency: "BRL" },
-    category: "Lazer",
-    description: "Restaurante italiano"
-  },
-  {
-    transactionId: "tx40",
-    timestamp: "2025-07-14T08:20:00Z",
-    amount: { amount: "41.30", currency: "BRL" },
-    category: "Alimentação",
-    description: "Padaria"
-  },
-  {
-    transactionId: "tx41",
-    timestamp: "2025-07-14T12:00:00Z",
-    amount: { amount: "130.00", currency: "BRL" },
-    category: "Educação",
-    description: "Livros didáticos"
-  },
-  {
-    transactionId: "tx42",
-    timestamp: "2025-07-14T19:50:00Z",
-    amount: { amount: "75.00", currency: "BRL" },
-    category: "Lazer",
-    description: "Cinema"
-  },
-  {
-    transactionId: "tx43",
-    timestamp: "2025-07-15T09:10:00Z",
-    amount: { amount: "22.00", currency: "BRL" },
-    category: "Transporte",
-    description: "Ônibus"
-  },
-  {
-    transactionId: "tx44",
-    timestamp: "2025-07-15T14:40:00Z",
-    amount: { amount: "68.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Supermercado"
-  },
-  {
-    transactionId: "tx45",
-    timestamp: "2025-07-15T18:30:00Z",
-    amount: { amount: "50.00", currency: "BRL" },
+    transactionId: "99",
+    description: "Remédio",
+    amount: { amount: "64.00", currency: "BRL" },
     category: "Saúde",
-    description: "Consulta odontológica"
+    timestamp: "2025-10-07T09:00:00Z"
   },
   {
-    transactionId: "tx46",
-    timestamp: "2025-07-16T07:50:00Z",
-    amount: { amount: "39.00", currency: "BRL" },
+    transactionId: "100",
+    description: "Padaria",
+    amount: { amount: "23.00", currency: "BRL" },
     category: "Alimentação",
-    description: "Lanche rápido"
-  },
-  {
-    transactionId: "tx47",
-    timestamp: "2025-07-16T11:30:00Z",
-    amount: { amount: "60.00", currency: "BRL" },
-    category: "Educação",
-    description: "Material escolar"
-  },
-  {
-    transactionId: "tx48",
-    timestamp: "2025-07-16T20:00:00Z",
-    amount: { amount: "120.00", currency: "BRL" },
-    category: "Lazer",
-    description: "Barzinho"
-  },
-  {
-    transactionId: "tx49",
-    timestamp: "2025-07-17T08:40:00Z",
-    amount: { amount: "52.00", currency: "BRL" },
-    category: "Vestuário",
-    description: "Boné"
-  },
-  {
-    transactionId: "tx50",
-    timestamp: "2025-07-17T14:50:00Z",
-    amount: { amount: "93.00", currency: "BRL" },
-    category: "Mercado",
-    description: "Compras do mês"
+    timestamp: "2025-10-08T07:30:00Z"
   }
 ];
-
-async function seedTransactions() {
-  for (const tx of transactions) {
-    await addDoc(collection(db, "transactions"), tx);
-    console.log(`Transação adicionada: ${tx.transactionId}`);
-  }
-  console.log('Todas as transações foram adicionadas!');
-}
-
-seedTransactions();

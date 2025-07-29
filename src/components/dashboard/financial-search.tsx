@@ -5,24 +5,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { handleFinancialQuestion } from '@/app/actions';
 import { Loader2, Send } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/logo';
 import { ChatMessage } from './chat-message';
+import { type Transaction } from "@/services/transactionService";
+import { handleFinancialQuestion } from "@/app/actions";
 
 type Message = {
   role: 'user' | 'model';
   content: string;
 };
 
-export function FinancialSearch() {
+type FinancialSearchProps = {
+  transactions: Transaction[];
+};
+
+export function FinancialSearch({ transactions }: FinancialSearchProps) {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,10 +37,12 @@ export function FinancialSearch() {
 
   useEffect(() => {
     const userName = user?.displayName || user?.email?.split('@')[0] || 'usuário';
-    setMessages([{
-      role: 'model',
-      content: `Olá, ${userName}! Sou seu assistente financeiro. Como posso te ajudar hoje? Pergunte sobre suas finanças, peça dicas de economia ou compare produtos.`
-    }]);
+    setMessages([
+      {
+        role: 'model',
+        content: `Olá, ${userName}! Sou seu Oráculo Financeiro. Pergunte sobre suas finanças, investimentos ou economia.`
+      }
+    ]);
   }, [user]);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -49,8 +55,7 @@ export function FinancialSearch() {
     setQuery('');
 
     try {
-      // Remove mensagem de boas-vindas do histórico enviado à IA
-      const historyForAI = [...messages, userMessage].filter(
+      const historyForAI = messages.filter(
         (msg) => !msg.content.startsWith('Olá,')
       );
 
@@ -58,18 +63,14 @@ export function FinancialSearch() {
         question: query,
         history: historyForAI,
         userEmail: user?.email,
+        transactions,
       });
-
-      console.log("DEBUG FRONTEND - Resposta do backend:", result);
 
       const assistantMessage: Message = {
         role: 'model',
-        content: result && typeof result.answer === 'string' && result.answer.trim()
-          ? result.answer
-          : '[⚠️ Resposta da IA ausente!]',
+        content: result?.answer || '[⚠️ Resposta da IA ausente!]',
       };
       setMessages(prev => [...prev, assistantMessage]);
-
     } catch (error: any) {
       console.error("Erro ao chamar a Server Action no frontend:", error);
       toast({
@@ -77,7 +78,7 @@ export function FinancialSearch() {
         description: error.message || 'Não foi possível se conectar ao backend. Tente novamente.',
         variant: 'destructive',
       });
-      setMessages(prev => prev.slice(0, -1));
+      setMessages(prev => prev.slice(0, prev.length - 1));
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ export function FinancialSearch() {
         {loading && (
           <div className="flex items-center justify-start p-2">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground ml-2">Oráculo está pensando...</p>
+            <p className="text-sm text-muted-foreground ml-2">Oráculo está analisando seus dados...</p>
           </div>
         )}
         <form onSubmit={handleSearch} className="flex items-center gap-2 pt-4 border-t">

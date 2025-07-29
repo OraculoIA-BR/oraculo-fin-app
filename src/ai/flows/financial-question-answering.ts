@@ -1,70 +1,71 @@
-import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+"use server";
+
 import { gemini15Flash } from '@genkit-ai/googleai';
+import { z } from 'zod';
+import { financialQuestionSchema } from '@/ai/schemas';
+import { ai } from '../genkit';
 
-const messageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
+// Define o tipo de entrada a partir do schema importado
+export type FinancialQuestionInput = z.infer<typeof financialQuestionSchema>;
 
-const financialQuestionSchema = z.object({
-  question: z.string(),
-  history: z.array(messageSchema).optional(),
-  userEmail: z.string().optional(),
-});
-
+// Define um tipo de saída claro e simples
 export type FinancialQuestionOutput = {
   answer: string;
 };
 
+/**
+ * Função principal que consulta a IA e retorna a resposta.
+ * Exporta somente a função async, sem objetos ou schemas.
+ */
 export async function answerFinancialQuestion(
-  input: z.infer<typeof financialQuestionSchema>
+  input: FinancialQuestionInput
 ): Promise<FinancialQuestionOutput> {
-  try {
-    const genkitHistory =
-      input.history?.map((msg) => ({
-        role: msg.role,
-        parts: [{ text: msg.content }],
-      })) || [];
+  const genkitHistory =
+    input.history?.map((msg) => ({
+      role: msg.role,
+      parts: [{ text: msg.content }],
+    })) || [];
 
-    const llmResponse = await ai.generate({
-      model: gemini15Flash,
-      history: genkitHistory,
-      prompt: `
-        Você é Oráculo, um especialista em finanças pessoais.
-        Sua tarefa é responder a perguntas sobre as finanças do usuário.
-        O usuário está logado com o e-mail: ${input.userEmail}.
+  const transactionsContext = input.transactions
+    ? `
+**Histórico de Transações do Usuário (para contexto):**
+${JSON.stringify(input.transactions, null, 2)}
+`
+    : 'Nenhum histórico de transações foi fornecido.';
 
-        **REGRAS:**
-        1.  Responda sempre em Português do Brasil.
-        2.  Seja claro e objetivo.
-        3.  Se a pergunta não for sobre finanças, recuse educadamente.
+  const llmResponse = await ai.generate({
+    model: gemini15Flash,
+    history: genkitHistory,
+    prompt: `
+      Você é Oráculo, um especialista em finanças pessoais.
+      Sua tarefa é responder a perguntas sobre as finanças do usuário com base em seu histórico de transações.
+      O usuário está logado com o e-mail: ${input.userEmail}.
+      **REGRAS:**
+      1. Responda sempre em Português do Brasil.
+      2. Seja claro, objetivo e amigável.
+      3. Use os dados das transações para fundamentar suas respostas.
+      4. Se a pergunta não for sobre finanças, recuse educadamente.
+      5. Não invente informações; baseie-se apenas nos dados fornecidos.
+      ${transactionsContext}
+      **Pergunta do Usuário:**
+      ${input.question}
+    `,
+    config: {
+      temperature: 0.3,
+    },
+  });
 
-        **Pergunta do Usuário:**
-        ${input.question}
-      `,
-      config: {
-        temperature: 0.5,
-      },
-    });
+  const answer = llmResponse?.text();
 
-    // --- INÍCIO DA CORREÇÃO FINAL ---
-    // Ajusta o caminho para corresponder à estrutura de resposta real do log.
-    const answer = llmResponse?.custom?.candidates?.[0]?.content?.parts?.[0]?.text;
-    // --- FIM DA CORREÇÃO FINAL ---
-
-    if (!answer) {
-      console.warn("Não foi possível extrair o texto da resposta da IA. Resposta completa:", JSON.stringify(llmResponse, null, 2));
-      return { answer: "[⚠️ A IA não forneceu uma resposta em um formato esperado.]" };
-    }
-
-    console.log('DEBUG - Resposta entregue ao frontend:', answer);
-    return { answer };
-
-  } catch (error) {
-    console.error("ERRO CRÍTICO NO FLUXO DE IA:", error);
-    return { 
-      answer: "Desculpe, ocorreu um erro de comunicação com o serviço de IA. Verifique as configurações de API ou a sua cota de uso e tente novamente." 
+  if (!answer) {
+    console.warn(
+      'Não foi possível extrair o texto da resposta da IA. Resposta completa:',
+      JSON.stringify(llmResponse, null, 2)
+    );
+    return {
+      answer: '[⚠️ A IA não forneceu uma resposta em um formato esperado.]',
     };
   }
+
+  return { answer };
 }
