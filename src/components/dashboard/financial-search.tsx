@@ -21,6 +21,39 @@ type FinancialSearchProps = {
   transactions: Transaction[];
 };
 
+// Função para normalizar/transmutar transações para o formato do schema do backend
+function normalizeTransactions(transactions: Transaction[]): any[] {
+  return transactions.map((t, idx) => {
+    // amount pode vir como objeto, número ou string
+    let amountValue = t.amount;
+    if (typeof amountValue === 'object' && amountValue !== null) {
+      // Se for objeto, tenta pegar o valor
+      amountValue = amountValue.value?.toString() ?? '';
+    } else if (typeof amountValue === 'number') {
+      amountValue = amountValue.toString();
+    } else if (typeof amountValue !== 'string') {
+      amountValue = '';
+    }
+
+    // currency pode estar dentro de amount ou no próprio objeto
+    let currencyValue = t.currency;
+    if (!currencyValue && typeof t.amount === 'object' && t.amount?.currency) {
+      currencyValue = t.amount.currency;
+    }
+    if (!currencyValue) currencyValue = 'BRL'; // default
+
+    return {
+      id: t.id?.toString() ?? idx.toString(),
+      amount: amountValue,
+      currency: currencyValue,
+      category: t.category?.toString() ?? '',
+      description: t.description?.toString() ?? '',
+      timestamp: t.timestamp?.toString() ?? '',
+      transactionId: t.transactionId?.toString() ?? t.id?.toString() ?? idx.toString(),
+    };
+  });
+}
+
 export function FinancialSearch({ transactions }: FinancialSearchProps) {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -59,11 +92,14 @@ export function FinancialSearch({ transactions }: FinancialSearchProps) {
         (msg) => !msg.content.startsWith('Olá,')
       );
 
+      // Usa a função para normalizar as transações
+      const normalizedTransactions = normalizeTransactions(transactions);
+
       const result = await handleFinancialQuestion({
         question: query,
         history: historyForAI,
         userEmail: user?.email,
-        transactions,
+        transactions: normalizedTransactions,
       });
 
       const assistantMessage: Message = {

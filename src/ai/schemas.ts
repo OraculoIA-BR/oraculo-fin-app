@@ -19,7 +19,7 @@ export const messageSchema = z.object({
 
 // Schema para a entrada da pergunta financeira
 export const financialQuestionSchema = z.object({
-  question: z.string(),
+  question: z.string().min(2, "A pergunta deve ter pelo menos 2 caracteres."),
   history: z.array(messageSchema).optional(),
   userEmail: z.string().optional(),
   transactions: z.array(transactionSchema).optional(),
