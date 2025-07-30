@@ -4,27 +4,18 @@ import { Pie, PieChart, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Transaction } from "@/services/transactionService";
 
-// Paleta fixa para categorias principais
+// Paleta fixa para categorias principais (igual despesas)
 const BASE_CATEGORY_COLORS: Record<string, string> = {
-  "Alimentação": "#2563eb",
-  "Transporte": "#fbbf24",
-  "Lazer": "#10b981",
-  "Moradia": "#f472b6",
-  "Compras": "#f59e42",
-  "Saúde": "#8b5cf6",
-  "Educação": "#3b82f6",
+  "Salário": "#fbbf24",
+  "Freela": "#38bdf8",
+  "Investimento": "#10b981",
+  "Rendimento": "#f472b6",
   "Outros": "#9ca3af",
-  "Padaria": "#2dd4bf",
-  "Academia": "#a21caf",
-  "Farmácia": "#6366f1",
-  "Aluguel": "#f87171",
-  "Restaurante": "#fb7185",
-  "Café": "#facc15",
+  // Pode adicionar mais categorias específicas se quiser
 };
 
 // Gera cor para categoria extra
 function generateColor(idx: number): string {
-  // Paleta alternativa (cores nunca cinza)
   const palette = [
     "#22d3ee", "#a3e635", "#f43f5e", "#fbbf24", "#c026d3",
     "#0ea5e9", "#eab308", "#84cc16", "#ef4444", "#ea580c",
@@ -33,7 +24,7 @@ function generateColor(idx: number): string {
   return palette[idx % palette.length];
 }
 
-interface SpendingChartProps {
+interface RevenueChartProps {
   transactions: Transaction[];
 }
 
@@ -45,7 +36,7 @@ function getMonthYearKey(date: Date) {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
 }
 
-// Custom tooltip para recharts, posicionado ao lado do mouse
+// Custom tooltip (igual despesas)
 function CustomPieTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     const color = payload[0].payload.fill;
@@ -73,14 +64,15 @@ function CustomPieTooltip({ active, payload, label }: any) {
   return null;
 }
 
-export function SpendingChart({ transactions }: SpendingChartProps) {
+export function RevenueChart({ transactions }: RevenueChartProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const expensesByMonth = useMemo(() => {
+  // Agrupa receitas por mês
+  const revenuesByMonth = useMemo(() => {
     const map: Record<string, Transaction[]> = {};
     transactions.forEach((t) => {
       const amount = parseFloat(t.amount);
-      if (isNaN(amount) || amount >= 0) return;
+      if (isNaN(amount) || amount <= 0) return;
       const dateObj = new Date(t.timestamp);
       const key = getMonthYearKey(dateObj);
       if (!map[key]) map[key] = [];
@@ -91,39 +83,40 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
 
   const now = new Date();
   const currentMonthKey = getMonthYearKey(now);
-  const monthsWithDespesa = Object.keys(expensesByMonth).sort().reverse();
+  const monthsWithReceitas = Object.keys(revenuesByMonth).sort().reverse();
 
   let displayMonthKey = currentMonthKey;
-  if (!expensesByMonth[displayMonthKey]) {
-    displayMonthKey = monthsWithDespesa.length > 0 ? monthsWithDespesa[0] : "";
+  if (!revenuesByMonth[displayMonthKey]) {
+    displayMonthKey = monthsWithReceitas.length > 0 ? monthsWithReceitas[0] : "";
   }
 
   const displayMonthDate = displayMonthKey
     ? new Date(`${displayMonthKey}-01T00:00:00Z`)
     : undefined;
 
+  // Dados para o gráfico
   const chartData = useMemo(() => {
-    if (!displayMonthKey || !expensesByMonth[displayMonthKey]) return [];
-    const spendingByCategory: Record<string, { category: string; amount: number; fill: string }> = {};
+    if (!displayMonthKey || !revenuesByMonth[displayMonthKey]) return [];
+    const revenueByCategory: Record<string, { category: string; amount: number; fill: string }> = {};
     const uniqueCategories: string[] = [];
-    expensesByMonth[displayMonthKey].forEach((transaction) => {
+    revenuesByMonth[displayMonthKey].forEach((transaction) => {
       const category = transaction.category || "Outros";
-      const amount = Math.abs(parseFloat(transaction.amount));
-      if (!spendingByCategory[category]) {
+      const amount = parseFloat(transaction.amount);
+      if (!revenueByCategory[category]) {
         uniqueCategories.push(category);
         const fill =
           BASE_CATEGORY_COLORS[category] ??
           generateColor(uniqueCategories.length - 1);
-        spendingByCategory[category] = {
+        revenueByCategory[category] = {
           category,
           amount: 0,
           fill,
         };
       }
-      spendingByCategory[category].amount += amount;
+      revenueByCategory[category].amount += amount;
     });
-    return Object.values(spendingByCategory);
-  }, [expensesByMonth, displayMonthKey]);
+    return Object.values(revenueByCategory);
+  }, [revenuesByMonth, displayMonthKey]);
 
   const totalAmount = useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.amount, 0);
@@ -135,11 +128,11 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
     return (
       <Card className="flex flex-col items-center justify-center p-4 mb-4">
         <CardHeader>
-          <CardTitle>Gastos por Categoria</CardTitle>
-          <CardDescription>Nenhuma despesa registrada no período.</CardDescription>
+          <CardTitle>Receitas por Categoria</CardTitle>
+          <CardDescription>Nenhuma receita registrada no período.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Adicione suas despesas para ver o gráfico.</p>
+          <p className="text-muted-foreground">Adicione suas receitas para ver o gráfico.</p>
         </CardContent>
       </Card>
     );
@@ -152,12 +145,12 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
   return (
     <Card className="flex flex-col p-4 mb-4 w-full max-w-2xl mx-auto items-center">
       <CardHeader className="items-center pb-0">
-        <CardTitle style={{ color: "#0B1F75", textAlign: "center" }}>Gastos por Categoria</CardTitle>
+        <CardTitle style={{ color: "#0B1F75", textAlign: "center" }}>Receitas por Categoria</CardTitle>
         <CardDescription className="text-center">
           {displayMonthDate ? parseMonthYear(displayMonthDate) : ""}
           {displayMonthKey !== currentMonthKey && (
             <span className="text-xs text-muted-foreground block">
-              Mostrando o mês mais recente com despesa
+              Mostrando o mês mais recente com receita
             </span>
           )}
         </CardDescription>

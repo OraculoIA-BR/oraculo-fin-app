@@ -1,15 +1,14 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { vertexAI } from '@genkit-ai/vertexai';
 
-console.log('[Oraculo IA] Configurando Genkit com GoogleAI.');
-console.log('[Oraculo IA] Tentando localizar GOOGLE_API_KEY no ambiente.');
+console.log('[Oraculo IA] Configurando Genkit com o plugin Vertex AI.');
 
 export const ai = genkit({
   plugins: [
-    googleAI(),
+    vertexAI({ location: 'us-east1' }),
   ],
   traceStore: {
-    provider: 'dev', // Local trace para depuração.
+    provider: 'dev',
   },
   logLevel: 'debug',
 });

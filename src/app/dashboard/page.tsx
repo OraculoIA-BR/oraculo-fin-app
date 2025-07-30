@@ -5,9 +5,11 @@ import { Loader2 } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
+import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { CategoryCharts } from "@/components/dashboard/category-charts";
 import { FinancialSearch } from "@/components/dashboard/financial-search";
+import InsightsBox from "@/components/dashboard/InsightsBox";
 
 export default function DashboardPage() {
   const { transactions, loading, error } = useTransactions();
@@ -30,22 +32,30 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      {/* Passa as transações para o componente de busca financeira */}
-      <FinancialSearch transactions={transactions} />
-      
-      <SummaryCards transactions={transactions} />
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
+
+        {/* Insights e Dicas sobre o histórico de transações */}
+        <InsightsBox transactions={transactions} />
+
+        {/* Busca financeira */}
+        <FinancialSearch transactions={transactions} />
+
+        {/* Cards financeiros */}
+        <SummaryCards transactions={transactions} />
+
+        {/* Gráficos de gastos e receitas lado a lado */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <SpendingChart transactions={transactions} />
-          <CategoryCharts transactions={transactions} />
+          <RevenueChart transactions={transactions} />
         </div>
-        <div className="lg:col-span-3"></div>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <RecentTransactions transactions={transactions} />
-        <div />
+
+        {/* Outros gráficos de categoria (opcional) */}
+        <CategoryCharts transactions={transactions} />
+
+        {/* Transações Recentes */}
+        <div className="flex flex-col gap-6 w-full">
+          <RecentTransactions transactions={transactions} />
+        </div>
       </div>
     </DashboardLayout>
   );

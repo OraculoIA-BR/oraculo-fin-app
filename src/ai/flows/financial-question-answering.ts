@@ -1,23 +1,20 @@
 "use server";
 
-import { gemini15Flash } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { financialQuestionSchema } from '@/ai/schemas';
-import { ai } from '../genkit';
+// Importa o modelo Gemini 2.0 Flash do Vertex AI (disponível)
+import { gemini20Flash } from '@genkit-ai/vertexai';
 
 export type FinancialQuestionInput = z.infer<typeof financialQuestionSchema>;
 export type FinancialQuestionOutput = {
   answer: string;
 };
 
-/**
- * Função principal que consulta a IA e retorna a resposta.
- * Exporta somente a função async, sem objetos ou schemas.
- */
 export async function answerFinancialQuestion(
   input: FinancialQuestionInput
 ): Promise<FinancialQuestionOutput> {
-  // Prepara histórico para o LLM (Gemini, etc)
+  // Prepara histórico para o LLM
   const genkitHistory =
     input.history?.map((msg) => ({
       role: msg.role,
@@ -32,9 +29,9 @@ ${JSON.stringify(input.transactions, null, 2)}
 `
     : 'Nenhum histórico de transações foi fornecido.';
 
-  // Prompt para o modelo
+  // Prompt para o modelo Gemini 2.0 Flash via Vertex AI
   const llmResponse = await ai.generate({
-    model: gemini15Flash,
+    model: gemini20Flash,
     history: genkitHistory,
     prompt: `
       Você é Oráculo, um especialista em finanças pessoais.
@@ -42,10 +39,11 @@ ${JSON.stringify(input.transactions, null, 2)}
       O usuário está logado com o e-mail: ${input.userEmail ?? "desconhecido"}.
       **REGRAS:**
       1. Responda sempre em Português do Brasil.
-      2. Seja claro, objetivo e amigável.
+      2. Seja claro, objetivo, amigável.
       3. Use os dados das transações para fundamentar suas respostas, se disponíveis.
       4. Se a pergunta não for sobre finanças, recuse educadamente.
-      5. Não invente informações; baseie-se apenas nos dados fornecidos.
+      5. Responda de forma RESUMIDA (máximo 5 linhas).
+      6. Não invente informações; baseie-se apenas nos dados fornecidos.
       ${transactionsContext}
       **Pergunta do Usuário:**
       ${input.question}
@@ -55,7 +53,7 @@ ${JSON.stringify(input.transactions, null, 2)}
     },
   });
 
-  // CORRIGIDO: .text => .text
+  // Vertex AI retorna 'text' como propriedade
   const answer = llmResponse?.text;
 
   if (!answer) {
