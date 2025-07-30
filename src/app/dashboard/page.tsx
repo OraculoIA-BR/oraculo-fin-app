@@ -10,6 +10,7 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { CategoryCharts } from "@/components/dashboard/category-charts";
 import { FinancialSearch } from "@/components/dashboard/financial-search";
 import InsightsBox from "@/components/dashboard/InsightsBox";
+import CashFlowTablePF from "@/components/dashboard/CashFlowTablePF";
 
 export default function DashboardPage() {
   const { transactions, loading, error } = useTransactions();
@@ -39,6 +40,9 @@ export default function DashboardPage() {
 
         {/* Busca financeira */}
         <FinancialSearch transactions={transactions} />
+
+        {/* Tabela de Fluxo de Caixa Pessoal */}
+        <CashFlowTablePF transactions={transactions} />
 
         {/* Cards financeiros */}
         <SummaryCards transactions={transactions} />
