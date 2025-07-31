@@ -11,9 +11,18 @@ import { CategoryCharts } from "@/components/dashboard/category-charts";
 import { FinancialSearch } from "@/components/dashboard/financial-search";
 import InsightsBox from "@/components/dashboard/InsightsBox";
 import CashFlowTablePF from "@/components/dashboard/CashFlowTablePF";
+import CashFlowChartPF, { SaldoMes } from "@/components/dashboard/CashFlowChartPF";
+import CashFlowLineChartPF from "@/components/dashboard/CashFlowLineChartPF"; // <--- NOVO GRÁFICO DE LINHA
+import { getSaldosFinaisPorMes } from "@/components/dashboard/cashflowUtils";
 
 export default function DashboardPage() {
   const { transactions, loading, error } = useTransactions();
+
+  // Saldos finais prontos para gráfico e tabela
+  const saldosFinaisPorMes: SaldoMes[] = React.useMemo(
+    () => getSaldosFinaisPorMes(transactions),
+    [transactions]
+  );
 
   if (loading) {
     return (
@@ -34,28 +43,25 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
-
         {/* Insights e Dicas sobre o histórico de transações */}
         <InsightsBox transactions={transactions} />
-
         {/* Busca financeira */}
         <FinancialSearch transactions={transactions} />
-
         {/* Tabela de Fluxo de Caixa Pessoal */}
         <CashFlowTablePF transactions={transactions} />
-
+        {/* Gráfico de Fluxo de Caixa, com saldo final do mês */}
+        <CashFlowChartPF saldosFinaisPorMes={saldosFinaisPorMes} />
+        {/* NOVO GRÁFICO DE LINHA DO SALDO MENSAL */}
+        <CashFlowLineChartPF saldosFinaisPorMes={saldosFinaisPorMes} />
         {/* Cards financeiros */}
         <SummaryCards transactions={transactions} />
-
         {/* Gráficos de gastos e receitas lado a lado */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <SpendingChart transactions={transactions} />
           <RevenueChart transactions={transactions} />
         </div>
-
         {/* Outros gráficos de categoria (opcional) */}
         <CategoryCharts transactions={transactions} />
-
         {/* Transações Recentes */}
         <div className="flex flex-col gap-6 w-full">
           <RecentTransactions transactions={transactions} />

@@ -15,47 +15,28 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Transaction } from "@/services/transactionService";
+import {
+  getMonthLabels,
+  groupTransactionsByMonth,
+  getSaldosFinaisPorMes,
+} from "./cashflowUtils";
 
-// Helper para formatar valores
+// Bordas: 2px vira 1px, 1px vira 0.5px
+const mainBorder = "0.5px solid #0B1F75";
+const thickBorder = "1px solid #0B1F75";
+
+// Helper para formatar valores (sem "R$")
 function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-// Helper para agrupar transações por mês
-function groupTransactionsByMonth(transactions: Transaction[]) {
-  const groups: Record<string, Transaction[]> = {};
-  transactions.forEach((t) => {
-    const date = new Date(t.timestamp);
-    const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(t);
-  });
-  return groups;
-}
-
-// Meses para colunas (ordem decrescente: mais atual -> mais antigo)
-function getMonthLabels(transactions: Transaction[]) {
-  const months = Array.from(
-    new Set(
-      transactions.map((t) => {
-        const date = new Date(t.timestamp);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
-      })
-    )
-  ).sort((a, b) => (a < b ? 1 : -1)); // ordem decrescente
-  return months.map((key) => {
-    const date = new Date(`${key}-01T00:00:00`);
-    return {
-      key,
-      label: date.toLocaleString("default", { month: "short" }) + "/" + date.getFullYear(),
-    };
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
-// Azul escuro para coluna de categorias e linha dos meses
 const CATEGORY_BG = "#e3e9f8";
 const HIGHLIGHT_BG = "#f3f6fb";
 
+// Estrutura das linhas e categorias
 const ROWS_STRUCTURE = [
   {
     id: "saldo_anterior",
@@ -116,84 +97,283 @@ const ROWS_STRUCTURE = [
 ];
 
 // Função para calcular valores para cada célula
-function calculateRowValue(rowId: string, transactions: Transaction[]) {
+function calculateRowValue(
+  rowId: string,
+  transactions: Transaction[],
+  prevMonthBalance: number = 0
+) {
   switch (rowId) {
     case "saldo_anterior":
-      return 0;
+      return prevMonthBalance;
     case "recebimentos":
-      return transactions.filter((t) => Number(t.amount) > 0).reduce((acc, t) => acc + Number(t.amount), 0);
+      return transactions
+        .filter((t) => Number(t.amount) > 0)
+        .reduce((acc, t) => acc + Number(t.amount), 0);
     case "salario":
-      return transactions.filter((t) => Number(t.amount) > 0 && t.category === "Salário").reduce((acc, t) => acc + Number(t.amount), 0);
+      return transactions
+        .filter(
+          (t) => Number(t.amount) > 0 && t.category === "Salário"
+        )
+        .reduce((acc, t) => acc + Number(t.amount), 0);
     case "freela":
-      return transactions.filter((t) => Number(t.amount) > 0 && ["Freela", "Freelance", "Serviços"].includes(t.category)).reduce((acc, t) => acc + Number(t.amount), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) > 0 &&
+            ["Freela", "Freelance", "Serviços"].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Number(t.amount), 0);
     case "investimentos":
-      return transactions.filter((t) => Number(t.amount) > 0 && ["Investimento", "Rendimento"].includes(t.category)).reduce((acc, t) => acc + Number(t.amount), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) > 0 &&
+            ["Investimento", "Rendimento"].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Number(t.amount), 0);
     case "outros_receb":
-      return transactions.filter((t) => Number(t.amount) > 0 && !["Salário", "Freela", "Freelance", "Serviços", "Investimento", "Rendimento"].includes(t.category)).reduce((acc, t) => acc + Number(t.amount), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) > 0 &&
+            ![
+              "Salário",
+              "Freela",
+              "Freelance",
+              "Serviços",
+              "Investimento",
+              "Rendimento",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Number(t.amount), 0);
 
     case "pagamentos":
-      return transactions.filter((t) => Number(t.amount) < 0).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter((t) => Number(t.amount) < 0)
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "moradia":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Moradia", "Aluguel", "Condomínio", "Energia", "Água"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            [
+              "Moradia",
+              "Aluguel",
+              "Condomínio",
+              "Energia",
+              "Água",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "alimentacao":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Alimentação", "Supermercado", "Restaurante", "Delivery"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            [
+              "Alimentação",
+              "Supermercado",
+              "Restaurante",
+              "Delivery",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "transporte":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Transporte", "Combustível", "Transporte Público", "Manutenção"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            [
+              "Transporte",
+              "Combustível",
+              "Transporte Público",
+              "Manutenção",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "saude":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Saúde", "Plano", "Consulta", "Farmácia"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ["Saúde", "Plano", "Consulta", "Farmácia"].includes(
+              t.category
+            )
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "educacao":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Educação", "Escola", "Curso", "Livro"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ["Educação", "Escola", "Curso", "Livro"].includes(
+              t.category
+            )
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "lazer":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Lazer", "Viagem", "Passeio", "Cinema", "Hobby"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ["Lazer", "Viagem", "Passeio", "Cinema", "Hobby"].includes(
+              t.category
+            )
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "adm":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Administrativo", "Banco", "Tarifa", "Seguro"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ["Administrativo", "Banco", "Tarifa", "Seguro"].includes(
+              t.category
+            )
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "impostos":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Imposto", "Taxa", "IPTU", "IPVA", "IR", "ISS"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            [
+              "Imposto",
+              "Taxa",
+              "IPTU",
+              "IPVA",
+              "IR",
+              "ISS",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "bens_imobilizados":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Bem Imobilizado", "Imobilizado", "Equipamento", "Veículo"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            [
+              "Bem Imobilizado",
+              "Imobilizado",
+              "Equipamento",
+              "Veículo",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "emprestimos":
-      return transactions.filter((t) => Number(t.amount) < 0 && ["Empréstimo", "Financiamento", "Crédito"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ["Empréstimo", "Financiamento", "Crédito"].includes(
+              t.category
+            )
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "outros_pagamentos":
-      return transactions.filter((t) => Number(t.amount) < 0 &&
-        !["Moradia","Alimentação","Transporte","Saúde","Educação","Lazer","Administrativo","Banco","Tarifa","Seguro","Imposto","Taxa","IPTU","IPVA","IR","ISS","Bem Imobilizado","Imobilizado","Equipamento","Veículo","Empréstimo","Financiamento","Crédito"]
-        .includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter(
+          (t) =>
+            Number(t.amount) < 0 &&
+            ![
+              "Moradia",
+              "Alimentação",
+              "Transporte",
+              "Saúde",
+              "Educação",
+              "Lazer",
+              "Administrativo",
+              "Banco",
+              "Tarifa",
+              "Seguro",
+              "Imposto",
+              "Taxa",
+              "IPTU",
+              "IPVA",
+              "IR",
+              "ISS",
+              "Bem Imobilizado",
+              "Imobilizado",
+              "Equipamento",
+              "Veículo",
+              "Empréstimo",
+              "Financiamento",
+              "Crédito",
+            ].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
 
     case "geracao_caixa":
-      const receb = transactions.filter((t) => Number(t.amount) > 0).reduce((acc, t) => acc + Number(t.amount), 0);
-      const pag = transactions.filter((t) => Number(t.amount) < 0).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      const receb = transactions
+        .filter((t) => Number(t.amount) > 0)
+        .reduce((acc, t) => acc + Number(t.amount), 0);
+      const pag = transactions
+        .filter((t) => Number(t.amount) < 0)
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
       return receb - pag;
 
     case "transferencias":
-      return transactions.filter((t) => ["Transferência", "Depósito", "Saque"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter((t) =>
+          ["Transferência", "Depósito", "Saque"].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "entre_contas":
-      return transactions.filter((t) => t.category === "Transferência").reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter((t) => t.category === "Transferência")
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
     case "dinheiro":
-      return transactions.filter((t) => ["Depósito", "Saque"].includes(t.category)).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return transactions
+        .filter((t) =>
+          ["Depósito", "Saque"].includes(t.category)
+        )
+        .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
 
     case "saldo_final":
-      const saldoAnterior = 0;
-      const caixaGerado = (() => {
-        const receb = transactions.filter((t) => Number(t.amount) > 0).reduce((acc, t) => acc + Number(t.amount), 0);
-        const pag = transactions.filter((t) => Number(t.amount) < 0).reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
-        return receb - pag;
-      })();
-      return saldoAnterior + caixaGerado;
+      const saldoFinal = prevMonthBalance + transactions
+        .filter((t) => Number(t.amount) > 0)
+        .reduce((acc, t) => acc + Number(t.amount), 0) -
+        transactions
+          .filter((t) => Number(t.amount) < 0)
+          .reduce((acc, t) => acc + Math.abs(Number(t.amount)), 0);
+      return saldoFinal;
     default:
       return 0;
   }
 }
 
-interface CashFlowTablePFProps {
+export default function CashFlowTablePF({
+  transactions,
+}: {
   transactions: Transaction[];
-}
-
-export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) {
+}) {
   const [expanded, setExpanded] = React.useState<string[]>([]);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const dragData = React.useRef<{ isDragging: boolean; startX: number; scrollLeft: number }>({ isDragging: false, startX: 0, scrollLeft: 0 });
+  const dragData = React.useRef<{
+    isDragging: boolean;
+    startX: number;
+    scrollLeft: number;
+  }>({ isDragging: false, startX: 0, scrollLeft: 0 });
 
-  const monthLabels = React.useMemo(() => getMonthLabels(transactions), [transactions]);
-  const transactionsByMonth = React.useMemo(() => groupTransactionsByMonth(transactions), [transactions]);
+  const monthLabels = React.useMemo(
+    () => getMonthLabels(transactions),
+    [transactions]
+  );
+  const transactionsByMonth = React.useMemo(
+    () => groupTransactionsByMonth(transactions),
+    [transactions]
+  );
+  const saldosFinaisPorMes = React.useMemo(
+    () => getSaldosFinaisPorMes(transactions),
+    [transactions]
+  );
+  // Calcula saldo anterior para cada mês (usando os saldos finais já calculados)
+  const prevMonthBalances = React.useMemo(() => {
+    const result: Record<string, number> = {};
+    saldosFinaisPorMes.forEach((m, idx) => {
+      result[m.key] = idx > 0 ? saldosFinaisPorMes[idx - 1].saldoFinal : 0;
+    });
+    return result;
+  }, [saldosFinaisPorMes]);
 
   const handleExpandToggle = (rowId: string) => {
     setExpanded((prev) =>
@@ -203,13 +383,12 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
     );
   };
 
-  // Drag-to-scroll handlers
   React.useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const onMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return; // só botão esquerdo
+      if (e.button !== 0) return;
       dragData.current.isDragging = true;
       dragData.current.startX = e.pageX - container.offsetLeft;
       dragData.current.scrollLeft = container.scrollLeft;
@@ -220,7 +399,7 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
       if (!dragData.current.isDragging) return;
       e.preventDefault();
       const x = e.pageX - container.offsetLeft;
-      const walk = (x - dragData.current.startX);
+      const walk = x - dragData.current.startX;
       container.scrollLeft = dragData.current.scrollLeft - walk;
     };
     const onMouseUp = () => {
@@ -249,7 +428,7 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
     };
     const onTouchMove = (e: TouchEvent) => {
       const x = e.touches[0].pageX - container.offsetLeft;
-      const walk = (x - touchStartX);
+      const walk = x - touchStartX;
       container.scrollLeft = touchScrollLeft - walk;
     };
     const onTouchEnd = () => container.classList.remove("scrolling-active");
@@ -268,7 +447,6 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
     };
   }, []);
 
-  // Renderiza as linhas principais e expande subcategorias em linhas separadas
   const renderMainAndChildrenRows = (row: any) => {
     const isExpanded = expanded.includes(row.id);
     const hasChildren = !!row.children;
@@ -284,7 +462,8 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
             fontSize: "1rem",
             cursor: "move",
             userSelect: "none",
-            borderBottom: "1px solid #F13E8E",
+            borderBottom: mainBorder,
+            borderRadius: 0,
           },
         }}
         onClick={hasChildren ? () => handleExpandToggle(row.id) : undefined}
@@ -298,14 +477,15 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
             zIndex: 3,
             background: CATEGORY_BG,
             minWidth: 260,
-            borderRight: "2px solid #F13E8E",
+            borderRight: thickBorder,
             boxShadow: "2px 0 0 #fff",
             color: "#0B1F75",
-            borderBottom: "1px solid #F13E8E",
+            borderBottom: mainBorder,
             whiteSpace: "nowrap",
             py: 1.5,
             cursor: "move",
             userSelect: "none",
+            borderRadius: 0,
           }}
         >
           {hasChildren && (
@@ -322,7 +502,10 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
                 color: "#0B1F75",
                 cursor: "pointer",
               }}
-              onClick={(e) => { e.stopPropagation(); handleExpandToggle(row.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExpandToggle(row.id);
+              }}
               tabIndex={-1}
             >
               {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -337,79 +520,101 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
             sx={{
               fontWeight: 600,
               position: "relative",
-              borderRight: idx < monthLabels.length - 1 ? "1px solid #F13E8E" : "none",
+              borderRight: idx < monthLabels.length - 1 ? mainBorder : "none",
               background: highlight ? HIGHLIGHT_BG : "#fff",
               minWidth: 150,
               whiteSpace: "nowrap",
               py: 1.5,
               color: "#0B1F75",
-              borderBottom: "1px solid #F13E8E",
+              borderBottom: mainBorder,
               cursor: "move",
               userSelect: "none",
+              borderRadius: 0,
             }}
           >
-            {formatCurrency(calculateRowValue(row.id, transactionsByMonth[month.key] || []))}
+            {row.id === "saldo_anterior"
+              ? formatCurrency(prevMonthBalances[month.key] || 0)
+              : row.id === "saldo_final"
+              ? formatCurrency(
+                  saldosFinaisPorMes.find((m) => m.key === month.key)?.saldoFinal || 0
+                )
+              : formatCurrency(
+                  calculateRowValue(
+                    row.id,
+                    transactionsByMonth[month.key] || [],
+                    prevMonthBalances[month.key] || 0
+                  )
+                )}
           </TableCell>
         ))}
       </TableRow>
     );
 
-    const childrenRows = hasChildren && isExpanded
-      ? row.children.map((child: any) => (
-          <TableRow key={child.id} sx={{
-            bgcolor: "#fff",
-            "& td": {
-              borderBottom: "1px solid #F13E8E",
-              cursor: "move",
-              userSelect: "none",
-            }
-          }}>
-            <TableCell
+    const childrenRows =
+      hasChildren && isExpanded
+        ? row.children.map((child: any) => (
+            <TableRow
+              key={child.id}
               sx={{
-                position: "sticky",
-                left: 0,
-                zIndex: 2,
-                background: "#fff",
-                minWidth: 260,
-                borderRight: "2px solid #F13E8E", // linha vertical de 2px sempre
-                boxShadow: "2px 0 0 #fff",
-                pl: 2,
-                py: 0.5,
-                color: "#0B1F75",
-                fontSize: "1rem",
-                fontWeight: 400, // sem negrito
-                borderBottom: "1px solid #F13E8E",
-                whiteSpace: "nowrap",
-                cursor: "move",
-                userSelect: "none",
+                bgcolor: "#fff",
+                "& td": {
+                  borderBottom: mainBorder,
+                  cursor: "move",
+                  userSelect: "none",
+                  borderRadius: 0,
+                },
               }}
             >
-              {child.label}
-            </TableCell>
-            {monthLabels.map((month, colIdx) => (
               <TableCell
-                key={month.key}
-                align="left"
                 sx={{
-                  borderRight: colIdx < monthLabels.length - 1 ? "1px solid #F13E8E" : "none",
+                  position: "sticky",
+                  left: 0,
+                  zIndex: 2,
                   background: "#fff",
-                  minWidth: 150,
-                  whiteSpace: "nowrap",
+                  minWidth: 260,
+                  borderRight: thickBorder,
+                  boxShadow: "2px 0 0 #fff",
+                  pl: 2,
                   py: 0.5,
                   color: "#0B1F75",
                   fontSize: "1rem",
-                  fontWeight: 400, // sem negrito
-                  borderBottom: "1px solid #F13E8E",
+                  fontWeight: 400,
+                  borderBottom: mainBorder,
+                  whiteSpace: "nowrap",
                   cursor: "move",
                   userSelect: "none",
+                  borderRadius: 0,
                 }}
               >
-                {formatCurrency(calculateRowValue(child.id, transactionsByMonth[month.key] || []))}
+                {child.label}
               </TableCell>
-            ))}
-          </TableRow>
-        ))
-      : null;
+              {monthLabels.map((month, colIdx) => (
+                <TableCell
+                  key={month.key}
+                  align="left"
+                  sx={{
+                    borderRight: colIdx < monthLabels.length - 1 ? mainBorder : "none",
+                    background: "#fff",
+                    minWidth: 150,
+                    whiteSpace: "nowrap",
+                    py: 0.5,
+                    color: "#0B1F75",
+                    fontSize: "1rem",
+                    fontWeight: 400,
+                    borderBottom: mainBorder,
+                    cursor: "move",
+                    userSelect: "none",
+                    borderRadius: 0,
+                  }}
+                >
+                  {formatCurrency(
+                    calculateRowValue(child.id, transactionsByMonth[month.key] || [])
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        : null;
 
     return (
       <React.Fragment key={row.id}>
@@ -419,12 +624,10 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
     );
   };
 
-  // Scrollbar oculta, aparece só durante scroll/drag
-  // Drag-to-scroll ativado em toda TableContainer
   return (
-    <Box sx={{ width: "100%", bgcolor: "#fff", borderRadius: 2, boxShadow: 2, my: 3, p: 2 }}>
+    <Box sx={{ width: "100%", bgcolor: "#fff", boxShadow: 2, my: 3, p: 2, borderRadius: 0 }}>
       <Typography variant="h5" color="primary" fontWeight={700} mb={2}>
-        Seu Fluxo de Caixa Pessoal
+        Fluxo de Caixa Pessoal (PF)
       </Typography>
       <TableContainer
         component={Paper}
@@ -435,10 +638,9 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
           maxHeight: "none",
           boxShadow: "none",
           width: "100%",
-          border: "1px solid #F13E8E",
-          borderRadius: 2,
+          border: thickBorder,
+          borderRadius: 0,
           cursor: "grab",
-          // Scrollbar só aparece durante scroll/drag ou hover
           "&::-webkit-scrollbar": {
             height: "0px",
             transition: "height 0.2s",
@@ -452,14 +654,13 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
             background: "#fff",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: "#F13E8E",
+            background: "#0B1F75",
             borderRadius: "8px",
           },
           "&::-webkit-scrollbar-track": {
             background: "#fff",
           },
-          // Firefox
-          scrollbarColor: "#F13E8E #fff",
+          scrollbarColor: "#0B1F75 #fff",
           scrollbarWidth: "none",
           "&.scrolling-active": {
             scrollbarWidth: "thin",
@@ -481,13 +682,14 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
                   background: CATEGORY_BG,
                   color: "#0B1F75",
                   fontWeight: 700,
-                  borderRight: "2px solid #F13E8E",
+                  borderRight: thickBorder,
                   boxShadow: "2px 0 0 #fff",
-                  borderBottom: "1px solid #F13E8E",
+                  borderBottom: mainBorder,
                   whiteSpace: "nowrap",
                   py: 1.5,
                   cursor: "move",
                   userSelect: "none",
+                  borderRadius: 0,
                 }}
               >
                 Categorias de Lançamentos
@@ -501,13 +703,14 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
                     color: "#0B1F75",
                     fontWeight: 700,
                     fontSize: "1rem",
-                    borderRight: idx < monthLabels.length - 1 ? "1px solid #F13E8E" : "none",
+                    borderRight: idx < monthLabels.length - 1 ? mainBorder : "none",
                     minWidth: 150,
                     whiteSpace: "nowrap",
-                    borderBottom: "1px solid #F13E8E",
+                    borderBottom: mainBorder,
                     py: 1.5,
                     cursor: "move",
                     userSelect: "none",
+                    borderRadius: 0,
                   }}
                 >
                   {month.label}
@@ -520,7 +723,6 @@ export default function CashFlowTablePF({ transactions }: CashFlowTablePFProps) 
           </TableBody>
         </Table>
       </TableContainer>
-      {/* Estilos globais extras para Safari e navegadores baseados em Webkit */}
       <style jsx global>{`
         .MuiPaper-root::-webkit-scrollbar {
           height: 0px !important;
